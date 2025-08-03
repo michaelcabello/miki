@@ -14,7 +14,7 @@ class UsersList extends Component
 
     public $search = '';
     public $status = 'all'; // all, active, inactive
-    public $perPage = 10;
+    public $perPage = 4;
 
     protected $paginationTheme = 'tailwind';
 

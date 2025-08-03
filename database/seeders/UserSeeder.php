@@ -49,6 +49,21 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'Local Delete', 'display_name' => 'Eliminar Local', 'model_name' => 'Local'])->SyncRoles([$adminRole]);
 
 
+        Permission::create(['name' => 'Brand List', 'display_name' => 'Listar Marcas', 'model_name' => 'Brand'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Brand View', 'display_name' => 'Ver Marca', 'model_name' => 'Brand'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Brand Create', 'display_name' => 'Crear Marca', 'model_name' => 'Brand'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Brand Update', 'display_name' => 'Actualizar Marca', 'model_name' => 'Brand'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Brand Delete', 'display_name' => 'Eliminar Marca', 'model_name' => 'Brand'])->SyncRoles([$adminRole]);
+
+
+        Permission::create(['name' => 'Category List', 'display_name' => 'Listar Categorias', 'model_name' => 'Category'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Category View', 'display_name' => 'Ver Categoria', 'model_name' => 'Category'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Category Create', 'display_name' => 'Crear Categoria', 'model_name' => 'Category'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Category Update', 'display_name' => 'Actualizar Categoria', 'model_name' => 'Category'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Category Delete', 'display_name' => 'Eliminar Categoria', 'model_name' => 'Category'])->SyncRoles([$adminRole]);
+
+
+
 
         User::find(1)->assignRole($adminRole);
         User::find(2)->assignRole($sellerRole);

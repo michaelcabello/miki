@@ -20,7 +20,8 @@ return new class extends Migration
             $table->string('movil')->nullable();
             $table->string('photo')->nullable();
             $table->string('dni')->nullable();
-            $table->enum('gender', [Employee::MASCULINO, Employee::FEMENINO])->nullable();
+            //$table->enum('gender', [Employee::MASCULINO, Employee::FEMENINO])->nullable();
+            $table->tinyInteger('gender')->nullable();
             $table->date('birthdate')->nullable();
             $table->boolean('state')->nullable();
 

@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         //crea 10 usuarios usando faker
-        User::factory(10)->create();
+        User::factory(18)->create();
 
         $this->call([
             CurrencySeeder::class,
@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             LocalSeeder::class,
             EmployeeSeeder::class,
+            UserSeeder::class,
            // TenantsTableSeeder::class,
         ]);
     }

@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\User;
 
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 class UserList extends Component
 {
@@ -13,14 +14,66 @@ class UserList extends Component
 
     public $search = '';
     public $status = 'all'; // all, active, inactive
-    public $perPage = 10;
-     public $selectedUsers = [];
-      public $selectAll = false;
+    public $perPage = 4;
+    public $selectedUsers = [];
+    public $selectAll = false;
     public $sortField = 'id';
     public $sortDirection = 'asc';
 
+    public $currentPageIds = [];
+
 
     protected $paginationTheme = 'tailwind';
+
+    //Esto permite que Livewire escuche si activas o desactivas cada campo.
+    public $columns = [
+        'address' => false,
+        'gender' => false,
+    ];
+
+
+    // Eliminar seleccionados
+    #[On('confirmDeleteSelected')]
+    public function deleteSelected()
+    {
+        // Solo tomamos las claves (IDs) donde el valor sea true
+        $selectedIds = array_keys(array_filter($this->selectedUsers));
+
+        if (!empty($selectedIds)) {
+            User::whereIn('id', $selectedIds)->delete();
+            $this->resetSelection();
+            $this->dispatch('usersDeleted'); // Evento JS para SweetAlert
+        }
+    }
+
+
+    #[On('deleteSingle')]
+    public function deleteSingle($id, $name)
+    {
+        User::find($id)?->delete();
+
+       /*  $this->dispatch('itemDeleted', [
+            'title' => '¡Usuario eliminado!',
+            'text' => 'El usuario fue eliminado correctamente.',
+            'icon' => 'success',
+        ]); */
+
+         //$this->dispatch('itemDeleted', title: 'TICOM', text: 'El usuario con {{$id}} fue eliminado correctamente.', icon: 'success');
+         $this->dispatch('itemDeleted', title: 'TICOM', text: 'El usuario '.$name.' con ID ' . $id . ' fue eliminado correctamente.', icon: 'success');
+
+    }
+
+
+
+
+    /* #[On('deleteSingle')]
+    public function deleteSingle($id)
+    {
+        User::find($id)?->delete();
+        unset($this->selectedUsers[$id]);
+        $this->dispatch('userDeleted');
+    } */
+
 
     public function updatingSearch()
     {
@@ -32,14 +85,30 @@ class UserList extends Component
         $this->resetPage();
     }
 
-     public function updatedSelectAll($value)
+
+
+    public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selectedUsers = User::pluck('id')->toArray();
+            $this->selectedUsers = User::pluck('id')->mapWithKeys(function ($id) {
+                return [$id => true];
+            })->toArray();
         } else {
             $this->selectedUsers = [];
         }
     }
+
+
+
+
+    //  Reset selección
+    private function resetSelection()
+    {
+        $this->selectAll = false;
+        $this->selectedUsers = [];
+    }
+
+
 
     public function sortBy($field)
     {
@@ -52,7 +121,7 @@ class UserList extends Component
     }
 
 
-     public function toggleStatus($userId)
+    public function toggleStatus($userId)
     {
         $user = User::find($userId);
         if ($user && $user->employee) {
@@ -61,12 +130,13 @@ class UserList extends Component
         }
     }
 
-    public function deleteSelected()
+    public function getSelectedCountProperty()
     {
-        User::whereIn('id', $this->selectedUsers)->delete();
-        $this->selectedUsers = [];
-        $this->selectAll = false;
+        return count(array_keys(array_filter($this->selectedUsers)));
     }
+
+
+
 
     public function render()
     {
@@ -96,9 +166,10 @@ class UserList extends Component
             $query->whereHas('employee', fn($q) => $q->where('state', false));
         }
 
-        //$users = $query->paginate($this->perPage);
+        // $users = $query->paginate($this->perPage);
+
         $users = $query->orderBy($this->sortField, $this->sortDirection)
-               ->paginate($this->perPage);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.user-list', compact('users'));
     }

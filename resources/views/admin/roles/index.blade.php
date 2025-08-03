@@ -5,7 +5,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow px-6 py-3">
             <x-breadcrumb :links="[
                 'Dashboard' => 'dashboard',
-                'Usuarios' => '#',
+                'Roles' => '#',
             ]" />
         </div>
 
@@ -16,7 +16,7 @@
 
 
 
-            @livewire('admin.user-list')
+            @livewire('admin.role-list')
 
 
         </div>

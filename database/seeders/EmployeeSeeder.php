@@ -110,7 +110,7 @@ class EmployeeSeeder extends Seeder
             'address' => 'Av Jose galvez 1731',
             'movil' => '996929478',
             'dni' => '19133423',
-            'gender' => 1,
+            'gender' => 2,
             'state' => true,
             'user_id' => 8,
             'local_id' => 2,
@@ -123,7 +123,7 @@ class EmployeeSeeder extends Seeder
             'address' => 'Av Jose galvez 1731',
             'movil' => '996929478',
             'dni' => '18833423',
-            'gender' => 1,
+            'gender' => 2,
             'state' => true,
             'user_id' => 9,
             'local_id' => 1,
@@ -136,7 +136,7 @@ class EmployeeSeeder extends Seeder
             'address' => 'Av Jose galvez 1731',
             'movil' => '996929478',
             'dni' => '11163444',
-            'gender' => 1,
+            'gender' => 2,
             'state' => true,
             'user_id' => 10,
             'local_id' => 2,
@@ -165,6 +165,105 @@ class EmployeeSeeder extends Seeder
             'gender' => 1,
             'state' => true,
             'user_id' => 12,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 13,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 14,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 15,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 16,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 17,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 18,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 19,
+            'local_id' => 2,
+            'position_id' => 2,
+            'photo' => '',
+
+        ]);
+         Employee::create([
+            'address' => 'Av Jose galvez 1731',
+            'movil' => '996929478',
+            'dni' => '18834230',
+            'gender' => 1,
+            'state' => true,
+            'user_id' => 20,
             'local_id' => 2,
             'position_id' => 2,
             'photo' => '',
