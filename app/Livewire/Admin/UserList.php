@@ -7,6 +7,10 @@ use App\Models\User;
 
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PasswordChanged;
+
 
 class UserList extends Component
 {
@@ -21,6 +25,14 @@ class UserList extends Component
     public $sortDirection = 'asc';
 
     public $currentPageIds = [];
+
+    public $showEditPassword = false;
+    public $userid;
+    public $name;
+    public $email;
+    public $password;
+    public $password_confirmation; //necesario para la validación de confirmación de contraseña
+    public $sendEmail = false;
 
 
     protected $paginationTheme = 'tailwind';
@@ -52,15 +64,14 @@ class UserList extends Component
     {
         User::find($id)?->delete();
 
-       /*  $this->dispatch('itemDeleted', [
+        /*  $this->dispatch('itemDeleted', [
             'title' => '¡Usuario eliminado!',
             'text' => 'El usuario fue eliminado correctamente.',
             'icon' => 'success',
         ]); */
 
-         //$this->dispatch('itemDeleted', title: 'TICOM', text: 'El usuario con {{$id}} fue eliminado correctamente.', icon: 'success');
-         $this->dispatch('itemDeleted', title: 'TICOM', text: 'El usuario '.$name.' con ID ' . $id . ' fue eliminado correctamente.', icon: 'success');
-
+        //$this->dispatch('itemDeleted', title: 'TICOM', text: 'El usuario con {{$id}} fue eliminado correctamente.', icon: 'success');
+        $this->dispatch('itemDeleted', title: 'TICOM', text: 'El usuario ' . $name . ' con ID ' . $id . ' fue eliminado correctamente.', icon: 'success');
     }
 
 
@@ -172,5 +183,44 @@ class UserList extends Component
             ->paginate($this->perPage);
 
         return view('livewire.admin.user-list', compact('users'));
+    }
+
+
+    public function editpassword($id)
+    {
+        $user = User::findOrFail($id);
+        $this->userid = $user->id;
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->showEditPassword = true;
+    }
+
+    public function updatePassword()
+    {
+
+        $this->validate([
+            'password' => 'required|confirmed|min:6',
+        ]);
+
+        $user = User::findOrFail($this->userid);
+        $user->password = Hash::make($this->password);
+        $user->save();
+
+        // Si el checkbox está activo, envía correo
+        if ($this->sendEmail) {
+            Mail::to($user->email)->send(new PasswordChanged($user, $this->password));
+        }
+
+        $this->reset(['password', 'showEditPassword', 'userid']);
+        $this->resetValidation();
+
+
+        $this->dispatch('show-swalindex', title: 'TICOM', text: 'El password se actualizó', icon: 'success');
+    }
+
+    public function closeModal()
+    {
+        $this->reset(['name', 'email', 'showEditPassword']);
+        $this->resetValidation(); // Limpiar errores de validación
     }
 }

@@ -35,6 +35,12 @@
                         ['title' => 'CRM', 'img' => 'crm.jpg', 'route' => '#'],
                         ['title' => 'Contable', 'img' => 'contable.jpg', 'route' => '#'],
                         ['title' => 'Empleados', 'img' => 'contable.jpg', 'route' => '#'],
+                        ['title' => 'Categoría del Post', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
+                        ['title' => 'Productos', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
+                        ['title' => 'Categorías', 'img' => 'contable.jpg', 'route' => route('admin.category.list')],
+                        ['title' => 'Marca', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
+                        ['title' => 'Modelo', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
+                        ['title' => 'Temporada', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                     ];
                 @endphp
 

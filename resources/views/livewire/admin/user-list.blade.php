@@ -307,13 +307,14 @@
                         <td class="px-4 py-3 text-center">
                             <div class="flex justify-center gap-2">
 
-                                  <!-- Ver -->
-                                <a href="{{ route('admin.users.show', $user) }}"
+                                <!-- Ver -->
+                                {{-- recomendable usar button u no la etiqueta a --}}
+                                <button wire:click="editpassword({{ $user->id }})"
                                     class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 transition">
                                     <i class="fa-solid fa-key"></i>
                                     <span
-                                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100">Ver</span>
-                                </a>
+                                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100">Password</span>
+                                </button>
                                 <!-- Ver -->
                                 <a href="{{ route('admin.users.show', $user) }}"
                                     class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 transition">
@@ -353,24 +354,127 @@
     <!-- Paginación -->
     <div class="mt-4">{{ $users->links() }}</div>
 
+
+<x-modal wire:model="showEditPassword">
+    <x-slot name="title">Cambio de Contraseña</x-slot>
+
+    <!-- Datos del usuario -->
+    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 mb-4">
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
+            <i class="fa-solid fa-user text-blue-500 mr-1"></i>
+            <span class="font-semibold text-gray-800 dark:text-white">Nombre:</span>
+            {{ $name }}
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-300">
+            <i class="fa-solid fa-envelope text-blue-500 mr-1"></i>
+            <span class="font-semibold text-gray-800 dark:text-white">Email:</span>
+            {{ $email }}
+        </p>
+    </div>
+
+    <!-- Nueva contraseña -->
+    <div class="space-y-4">
+        <div>
+            <x-label for="password">Nueva Contraseña</x-label>
+            <flux:input type="password" name="password" viewable  wire:model.defer="password" />
+            <flux:error name="password" />
+        </div>
+
+        <div>
+            <x-label for="password_confirmation">Repetir Contraseña</x-label>
+            <flux:input type="password" name="password_confirmation" viewable
+                wire:model.defer="password_confirmation" />
+            <flux:error name="password_confirmation" />
+        </div>
+
+        <!-- Checkbox para enviar correo -->
+        <div class="flex items-center mt-2">
+            <input type="checkbox" wire:model.defer="sendEmail" id="sendEmail" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+            <label for="sendEmail" class="ml-2 text-sm text-gray-700 dark:text-gray-200">
+                Enviar correo de notificación
+            </label>
+        </div>
+    </div>
+
+    <x-slot name="footer">
+        <button type="button" wire:click="updatePassword"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">
+            Cambiar Contraseña
+        </button>
+
+        <button type="button" wire:click="closeModal"
+            class="ml-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">
+            Cancelar
+        </button>
+    </x-slot>
+</x-modal>
+
+
+
+    {{--     <x-modal wire:model="showEditPassword">
+        <x-slot name="title">Cambio de Password</x-slot>
+
+        <div class="space-y-4">
+            <div>
+                <x-label value="name" />
+                <x-input wire:model="name" type="text" disabled class="w-full" />
+                <x-input-error for="name" />
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <x-label value="email" />
+                <x-input wire:model="email" type="text" disabled class="w-full" />
+                <x-input-error for="email" />
+            </div>
+        </div>
+
+        <div>
+            <x-label for="password">Contraseña:</x-label>
+            <flux:input type="password" name="password" viewable />
+            <flux:error name="password" />
+
+        </div>
+
+        <div>
+            <x-label for="password">Repetir Contraseña:</x-label>
+            <flux:input type="password" name="password_confirmation" viewable />
+
+        </div>
+
+        <x-slot name="footer">
+            <button type="button" wire:click="updatePassword"
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">
+                Cambiar Password
+            </button>
+
+            <button type="button" wire:click="closeModal"
+                class="ml-2 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded">
+                Cancelar
+            </button>
+        </x-slot>
+    </x-modal> --}}
+
+
     @push('scripts')
         <script>
             /* function confirmDelete() {
-                                Swal.fire({
-                                    title: '¿Estás seguro?',
-                                    text: "¡Esta acción eliminará los usuarios seleccionados!",
-                                    icon: 'warning',
-                                    showCancelButton: true,
-                                    confirmButtonColor: '#d33',
-                                    cancelButtonColor: '#3085d6',
-                                    confirmButtonText: 'Sí, eliminar',
-                                    cancelButtonText: 'Cancelar'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        Livewire.dispatch('confirmDeleteSelected'); // Emitimos evento
-                                    }
-                                });
-                            } */
+                                                                                Swal.fire({
+                                                                                    title: '¿Estás seguro?',
+                                                                                    text: "¡Esta acción eliminará los usuarios seleccionados!",
+                                                                                    icon: 'warning',
+                                                                                    showCancelButton: true,
+                                                                                    confirmButtonColor: '#d33',
+                                                                                    cancelButtonColor: '#3085d6',
+                                                                                    confirmButtonText: 'Sí, eliminar',
+                                                                                    cancelButtonText: 'Cancelar'
+                                                                                }).then((result) => {
+                                                                                    if (result.isConfirmed) {
+                                                                                        Livewire.dispatch('confirmDeleteSelected'); // Emitimos evento
+                                                                                    }
+                                                                                });
+                                                                            } */
 
             // Escucha cuando Livewire confirme que se eliminó
             /* document.addEventListener('livewire:navigated', () => {

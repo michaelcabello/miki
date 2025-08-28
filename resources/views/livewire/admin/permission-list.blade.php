@@ -156,11 +156,7 @@
             </div>
         </div>
 
-        {{-- <x-slot name="footer">
-            <x-button wire:click="updateDisplayName"
-                class="bg-blue-600 hover:bg-blue-700 text-white">Actualizar</x-button>
-            <x-button wire:click="closeModal" class="ml-2 bg-black hover:bg-gray-800 text-white">Cancelar</x-button>
-        </x-slot> --}}
+
         <x-slot name="footer">
             <button type="button" wire:click="updateDisplayName"
                 class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">
@@ -181,8 +177,8 @@
             <div>
                 <flux:heading size="lg">Actualizar Permiso</flux:heading>
             </div>
-            <flux:input label="Permiso" wire:model.live="display_name" />
 
+            <flux:input label="Permiso" wire:model.live="display_name" />
 
             <!-- Botón Cancelar -->
             <div class="flex gap-2">
