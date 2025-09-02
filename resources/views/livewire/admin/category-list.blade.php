@@ -142,13 +142,13 @@
                                         </a>
 
                                         <!-- Eliminar -->
-                                        <form method="POST" action="{{-- {{ route('category.destroy', $category) }} --}}" style="display:inline">
+                                        {{-- <form method="POST" action="" style="display:inline">
                                             {{ csrf_field() }} {{ method_field('DELETE') }}
                                             <button class="btn btn-red"
                                                 onclick="return confirm('¿Estas seguro de querer eliminar la Categoria?')">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
-                                        </form>
+                                        </form> --}}
 
 
 

@@ -15,17 +15,26 @@ class CategoryItem extends Component
     #[Modelable]
     public $selectedParentCategory;
 
-    public function render()
+    /* public function render()
     {
         return view('livewire.admin.category-item', [
             'depth' => $this->calculateDepth($this->category),
         ]);
+    } */
+
+    public function render()
+    {
+        return view('livewire.admin.category-item', [
+            'depth' => $this->category->depth, // usamos el campo ya guardado
+        ]);
     }
 
-    protected function calculateDepth($category, $depth = 0)
+
+
+    /* protected function calculateDepth($category, $depth = 0)
     {
         return $category->parent
             ? $this->calculateDepth($category->parent, $depth + 1)
             : $depth;
-    }
+    } */
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Account;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -39,7 +40,12 @@ class DatabaseSeeder extends Seeder
             LocalSeeder::class,
             EmployeeSeeder::class,
             UserSeeder::class,
+            SubAccountTypeSeeder::class,
+            AccountTypeSeeder::class,
+            AccountSeeder::class,
            // TenantsTableSeeder::class,
         ]);
+
+
     }
 }

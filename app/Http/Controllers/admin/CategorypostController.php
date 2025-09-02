@@ -61,6 +61,6 @@ class CategorypostController extends Controller
      */
     public function destroy(Categorypost $categorypost)
     {
-        //
+
     }
 }

@@ -62,12 +62,27 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'Category Update', 'display_name' => 'Actualizar Categoria', 'model_name' => 'Category'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'Category Delete', 'display_name' => 'Eliminar Categoria', 'model_name' => 'Category'])->SyncRoles([$adminRole]);
 
+        Permission::create(['name' => 'SubAccountType List', 'display_name' => 'Listar Sub tipo de cuentas contables', 'model_name' => 'SubAccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubAccountType View', 'display_name' => 'Ver Sub tipo de cuenta contable', 'model_name' => 'SubAccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubAccountType Create', 'display_name' => 'Crear Sub tipo de cuenta contable', 'model_name' => 'SubAccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubAccountType Update', 'display_name' => 'Actualizar Sub tipo de cuenta contable', 'model_name' => 'SubAccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubAccountType Delete', 'display_name' => 'Eliminar Sub tipo de cuenta contable', 'model_name' => 'SubAccountType'])->SyncRoles([$adminRole]);
 
 
+        Permission::create(['name' => 'AccountType List', 'display_name' => 'Listar tipo de cuentas contables', 'model_name' => 'AccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'AccountType View', 'display_name' => 'Ver tipo de cuenta contable', 'model_name' => 'AccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'AccountType Create', 'display_name' => 'Crear tipo de cuenta contable', 'model_name' => 'AccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'AccountType Update', 'display_name' => 'Actualizar tipo de cuenta contable', 'model_name' => 'AccountType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'AccountType Delete', 'display_name' => 'Eliminar tipo de cuenta contable', 'model_name' => 'AccountType'])->SyncRoles([$adminRole]);
+
+        Permission::create(['name' => 'Account List', 'display_name' => 'Listar cuentas contables', 'model_name' => 'Account'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Account View', 'display_name' => 'Ver cuenta contable', 'model_name' => 'Account'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Account Create', 'display_name' => 'Crear cuenta contable', 'model_name' => 'Account'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Account Update', 'display_name' => 'Actualizar cuenta contable', 'model_name' => 'Account'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Account Delete', 'display_name' => 'Eliminar cuenta contable', 'model_name' => 'Account'])->SyncRoles([$adminRole]);
 
         User::find(1)->assignRole($adminRole);
         User::find(2)->assignRole($sellerRole);
         User::find(3)->assignRole($grocerRole);
-
     }
 }

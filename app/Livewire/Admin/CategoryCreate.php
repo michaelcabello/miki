@@ -25,7 +25,11 @@ class CategoryCreate extends Component
 
     public function mount()
     {
-        $this->categories = Category::whereNull('parent_id')->get();
+        //$this->categories = Category::whereNull('parent_id')->get();
+        $this->categories = Category::with(['children', 'parent'])
+            ->whereNull('parent_id')
+            ->get();
+
     }
 
     public function save()
@@ -73,4 +77,7 @@ class CategoryCreate extends Component
 
         return view('livewire.admin.category-create');
     }
+
+
+
 }

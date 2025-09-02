@@ -11,20 +11,30 @@ use Livewire\Attributes\On;
 //php artisan make:livewire Admin/CategoryList
 class CategoryList extends Component
 {
-
     use WithPagination;
-
     public $categories;
-    //   public $companyId;
+    //public $companyId;
     //public $category;
-
-    //protected $listeners = ['confirmDeleteCategory'];
 
     public function mount()
     {
-
         // Obtener las categorías raíz y calcular su profundidad, whereNull cuando sea null
-        $this->categories = Category::whereNull('parent_id')->get();
+        //$this->categories = Category::whereNull('parent_id')->get();
+        /* $this->categories = Category::with(['children', 'parent.parent.parent'])
+            ->whereNull('parent_id')
+            ->get(); */
+
+
+        $this->categories = Category::with([
+            'children',
+            'children.parent',
+            'parent',
+            'parent.parent'
+        ])
+            ->whereNull('parent_id')
+            ->get();
+
+
         /* $this->categories = Category::whereNull('parent_id')->get()->map(function ($category) {
             $category->depth = $this->calculateDepth($category);
             return $category;
@@ -32,15 +42,6 @@ class CategoryList extends Component
         // dd($this->categories );
     }
 
-    /*   protected function calculateDepth($category, $depth = 0)
-    {
-
-        if (!$category->parent) {
-            return $depth;
-        } else {
-            return $this->calculateDepth($category->parent, $depth + 1);
-        }
-    } */
 
 
     /*  public function activar(Category $category)
@@ -69,26 +70,7 @@ class CategoryList extends Component
     } */
 
 
-    /*   public function delete(Category $category)
-    {
 
-        $category->delete();
-    } */
-
-    /*  public function deleteCategory($id)
-    {
-        $category = Category::find($id);
-
-        if ($category) {
-            $category->delete();
-
-            $this->categories = Category::with('children')->whereNull('parent_id')->get();
-
-            session()->flash('success', 'Categoría eliminada correctamente.');
-        } else {
-            session()->flash('error', 'No se encontró la categoría.');
-        }
-    } */
 
 
     #[On('deleteSingle')]
@@ -104,7 +86,7 @@ class CategoryList extends Component
 
 
 
-    #[On('deleteCategory')]
+    /*  #[On('deleteCategory')]
     public function deleteCategory($id, $name)
     {
         Category::find($id)?->delete();
@@ -115,13 +97,18 @@ class CategoryList extends Component
             text: "La categoría {$name} con ID {$id} fue eliminada correctamente.",
             icon: 'success'
         );
-    }
+    } */
 
 
     public function render()
     {
 
-        $this->categories = Category::with('children')
+        $this->categories = Category::with([
+            'children',
+            'children.parent',
+            'parent',
+            'parent.parent'
+        ])
             ->whereNull('parent_id')
             ->get();
 

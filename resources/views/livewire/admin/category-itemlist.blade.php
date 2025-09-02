@@ -49,10 +49,6 @@
         </div>
 
 
-
-
-
-
         <div class="px-6 text-sm font-medium text-right whitespace-nowrap flex items-center gap-2">
             <!-- State -->
             <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Activo</span>
@@ -62,20 +58,31 @@
                 <i class="fa-solid fa-pen-to-square"></i>
             </a>
 
-            <button
-                onclick="confirmDeletesimple({{ $category->id }}, @js($category->name), 'deleteSingle', 'La Categoría {{ $category->name }} con ID {{ $category->id }} será eliminado.')"
-                class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-red-600 transition">
-                <i class="fa-solid fa-trash"></i>
-                <span
-                    class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100">Eliminar</span>
-            </button>
+            {{--
+                ! style="display:inline" para que los botones se vean uno al lado de otro
+                ? <button type="button">
+                ? Muy importante: no envía el formulario automáticamente (si fuera submit lo enviaría sin confirmar). Solo lanza el onclick.
+            --}}
+
+
+            <form id="delete-form-{{ $category->id }}" method="POST"
+                action="{{ route('category.destroy', $category) }}" style="display:inline">
+                @csrf
+                @method('DELETE')
+
+                <button type="button" onclick="confirmDelete({{ $category->id }}, '{{ $category->name }}')"
+                    class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-red-600 transition">
+                    <i class="fa-solid fa-trash"></i>
+                    <span
+                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100">Eliminar</span>
+                </button>
+            </form>
 
 
         </div>
     </div>
 
-    {{-- <hr class="my-2 border-t border-gray-300 dotted"> --}}
-    {{-- <hr class="w-full my-2 border-t border-gray-300 dotted"> --}}
+
     <hr class="w-full my-2 border-t border-gray-300 dotted" style="margin-left: {{ $depth * 30 }}px">
 
     <ul x-show="open" @click.away="open = true">
@@ -90,7 +97,26 @@
     </ul>
 
 
+    <script>
 
+        /* Muestra un modal de confirmación con SweetAlert2. */
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: '¿Eliminar categoría?',
+                text: `La categoría "${name}" será eliminada.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`delete-form-${id}`).submit();
+                }
+            });
+        }
+    </script>
 
 
 

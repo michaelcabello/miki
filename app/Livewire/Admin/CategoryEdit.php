@@ -58,7 +58,7 @@ class CategoryEdit extends Component
     public function render()
     {
         $categories = Category::whereNull('parent_id')
-            ->with('children')
+            ->with(['children', 'parent'])
             ->get();
 
         return view('livewire.admin.category-edit', [

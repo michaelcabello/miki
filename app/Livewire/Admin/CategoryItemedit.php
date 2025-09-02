@@ -15,18 +15,25 @@ class CategoryItemedit extends Component
     #[Modelable]
     public $selectedParentCategory;
 
-    protected function calculateDepth($category, $depth = 0)
+    /* protected function calculateDepth($category, $depth = 0)
     {
         return $category->parent
             ? $this->calculateDepth($category->parent, $depth + 1)
             : $depth;
-    }
+    } */
 
+
+    /* public function render()
+    {
+        return view('livewire.admin.category-itemedit', [
+            'depth' => $this->calculateDepth($this->category),
+        ]);
+    } */
 
     public function render()
     {
         return view('livewire.admin.category-itemedit', [
-            'depth' => $this->calculateDepth($this->category),
+            'depth' => $this->category->depth, // usamos el campo ya guardado
         ]);
     }
 }

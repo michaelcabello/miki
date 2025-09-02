@@ -27,14 +27,32 @@ class Category extends Model
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    // Relación con las categorías hijas
+    // Relación con las categorías hijas, para que sea recursiva se pone with('children')
+    //lo veremos con laraveldebugbar
+    //composer require barryvdh/laravel-debugbar --dev
     public function children()
     {
-        return $this->hasMany(Category::class, 'parent_id');
+        return $this->hasMany(Category::class, 'parent_id')->with(['children', 'parent']); //poner estas 2 para que no exista n+1
     }
 
     //Relacion muchos a muchos sirve para las busquedas mas filtradas
-    public function brands(){
+    public function brands()
+    {
         return $this->belongsToMany(Brand::class);
+    }
+
+
+    // Calcular depth automáticamente
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($category) {
+            if (!$category->parent_id) {
+                $category->depth = 0;
+            } else {
+                $category->depth = $category->parent ? $category->parent->depth + 1 : 0;
+            }
+        });
     }
 }
