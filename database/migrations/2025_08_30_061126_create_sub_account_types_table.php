@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('name');
             $table->integer('order')->nullable(); // orden de presentación
             $table->boolean('state')->default(true); // activo o inactivo
+            $table->foreign('account_type_id')
+                  ->references('id')
+                  ->on('account_types')
+                  ->onDelete('cascade');
             $table->timestamps();
         });
     }

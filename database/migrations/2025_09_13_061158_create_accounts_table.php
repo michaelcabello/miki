@@ -14,29 +14,34 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
 
-             // Recursividad
+            // Recursividad
             $table->foreignId('parent_id')->nullable()->constrained('accounts')->nullOnDelete();
 
             // Datos contables
             $table->string('code', 20)->unique(); // código contable
-            $table->string('equivalent_code', 20)->nullable(); // cuenta equivalente SUNAT
+            $table->string('equivalentcode', 20)->nullable(); // cuenta equivalente SUNAT
             $table->string('name', 255)->nullable();; // nombre de la cuenta
-
+            $table->string('tag', 255)->nullable();; // etiquetas
             // Relación con tipo de cuenta
             $table->foreignId('account_type_id')->constrained('account_types')->nullable(); // otra tabla
 
             $table->boolean('reconcile')->default(false)->nullable(); // permite conciliar?
-            $table->boolean('cost_center')->default(false)->nullable(); // requiere centro de costos?
-            $table->boolean('current_account')->default(false)->nullable(); // es cuenta corriente (ej. bancos)?
+            $table->boolean('costcenter')->default(false)->nullable(); // requiere centro de costos?
+            //$table->boolean('current_account')->default(false)->nullable(); // es cuenta corriente (ej. bancos)?
+            $table->boolean('isrecord')->default(false)->nullable(); // permite saber si es la cuenta de registro
 
-            $table->boolean('registro')->default(false)->nullable(); // permite saber si es la cuenta de registro
 
             // Amarres
-           // $table->foreignId('debit_account_id')->nullable()->constrained('accounts')->nullable();
-           // $table->foreignId('credit_account_id')->nullable()->constrained('accounts')->nullable();
+            // $table->foreignId('debit_account_id')->nullable()->constrained('accounts')->nullable();
+            // $table->foreignId('credit_account_id')->nullable()->constrained('accounts')->nullable();
             // Recursividad calculada
             $table->integer('depth')->default(0)->nullable();
             $table->string('path')->nullable();
+
+            $table->foreignId('tax_id')
+                ->nullable() // si no siempre está relacionado
+                ->constrained('taxes') // referencia a tabla taxes
+                ->nullOnDelete(); // si se borra el tax, lo deja en NULL
 
             $table->timestamps();
         });

@@ -22,6 +22,7 @@ return new class extends Migration
            // $table->boolean('simplecompound')->default(true);//0false simple, 1true compuesto
 
             $table->enum('tipo', [Productfamilie::PRODUCTOTERMINADO, Productfamilie::MERCADERIA, Productfamilie::SERVICIO])->default(Productfamilie::PRODUCTOTERMINADO);
+            $table->enum('tracking', ['none', 'lot', 'serial'])->default('none');
 
             $table->boolean('haveserialnumber')->default(false);
             $table->string('gender')->nullable();//varon 1 mujer 2 unixex 3

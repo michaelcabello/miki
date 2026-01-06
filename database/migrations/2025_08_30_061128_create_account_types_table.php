@@ -18,8 +18,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description')->nullable(); // por cobrar, banco y efectivo, activos no correintes, prepagos, activos fijos
+            $table->text('note')->nullable();
             $table->integer('order')->nullable(); // orden de presentación
-            $table->foreignId('sub_account_type_id')->constrained('sub_account_types')->nullable(); // otra tabla
+            //$table->foreignId('sub_account_type_id')->constrained('sub_account_types')->nullable(); // otra tabla
             $table->boolean('state')->default(true); // activo o inactivo
             $table->timestamps();
         });

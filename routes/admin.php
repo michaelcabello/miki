@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\UserController;
 use App\Http\Controllers\Admin\UserExportController;
@@ -6,7 +7,8 @@ use App\Http\Controllers\Admin\UserExportController;
 use App\Exports\UsersExport;
 use App\Http\Controllers\admin\AccountController;
 use App\Http\Controllers\admin\CategoryController;
-use App\Http\Controllers\admin\CategorypostController;
+use App\Http\Controllers\Admin\CategorypostController;
+use App\Http\Controllers\Admin\ContactController;
 use Maatwebsite\Excel\Facades\Excel;
 
 use App\Http\Controllers\admin\UserImportController;
@@ -16,6 +18,8 @@ use App\Livewire\Admin\AccountList;
 use App\Livewire\Admin\CategoryCreate;
 use App\Livewire\Admin\CategoryEdit;
 use App\Livewire\Admin\CategoryList;
+
+use Livewire\Volt\Volt;
 
 Route::get('/hola', function () {
     return '¡Hola desde el admin!';
@@ -67,3 +71,15 @@ Route::get('/accounts', AccountList::class)->name('admin.accounts.index');
 Route::get('accountss/create', [AccountController::class, 'create'])->name('admin.accounts.create');
 Route::post('accountss', [AccountController::class, 'store'])->name('admin.accounts.store');
 
+//Route::view('/contacts', 'admin.contacts.index')->name('contacts.index');
+
+//Volt::route('contacts', 'admin.contacts.index')->name('contacts.index');
+
+Route::view('/contacts/create', 'livewire.admin.contacts.form')->name('contacts.create');
+Route::view('/contacts/{contact}/edit', 'livewire.admin.contacts.form')->name('contacts.edit');
+Route::view('/contacts/{contact}', 'livewire.admin.contacts.show')->name('contacts.show');
+
+//para la tabla contactos
+Route::resource('leads', ContactController::class)->names('admin.contacts');
+
+Route::resource('categoryposts', CategorypostController::class)->names('admin.categoryposts');

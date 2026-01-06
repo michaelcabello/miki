@@ -41,6 +41,9 @@
                         ['title' => 'Marca', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Modelo', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Temporada', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
+                        ['title' => 'Plan Contable', 'img' => 'contable.jpg', 'route' => route('admin.accounts.index')],
+                        ['title' => 'Categoría de Posts', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
+
                     ];
                 @endphp
 

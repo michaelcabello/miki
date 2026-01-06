@@ -40,8 +40,6 @@ class Account extends Model
     }
 
 
-
-
     /* public function accountType() //
     {
         return $this->belongsTo(AccountType::class);
@@ -50,5 +48,13 @@ class Account extends Model
     public function accountType(): BelongsTo
     {
         return $this->belongsTo(AccountType::class, 'account_type_id');
+    }
+
+     /**
+     * Relación: Una cuenta pertenece a un impuesto.
+     */
+    public function tax()
+    {
+        return $this->belongsTo(Tax::class);
     }
 }

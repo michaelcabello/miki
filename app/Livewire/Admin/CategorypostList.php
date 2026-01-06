@@ -79,4 +79,13 @@ class CategorypostList extends Component
 
         return view('livewire.admin.categorypost-list', compact('categoryposts'));
     }
+
+    public function toggleStatus($categorypostId)
+    {
+        $categorypost = Categorypost::find($categorypostId);
+        if ($categorypost) {
+            $categorypost->state = !$categorypost->state;
+            $categorypost->save();
+        }
+    }
 }

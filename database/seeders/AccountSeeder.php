@@ -36,8 +36,7 @@ class AccountSeeder extends Seeder
                     'parent_id' => null,
                     'account_type_id' => $element['account_type_id'],
                     'reconcile' => false,
-                    'cost_center' => false,
-                    'current_account' => false,
+                    'costcenter' => false,
                     'depth' => 0,
                     'path' => $element['code'],
                 ]

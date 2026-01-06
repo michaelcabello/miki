@@ -31,7 +31,11 @@
                     <tr>
                         <th class="px-4 py-2 border">Código</th>
                         <th class="px-4 py-2 border">Nombre</th>
+                        <th class="px-4 py-2 border">Tipo</th>
                         <th class="px-4 py-2 border">Equivalente</th>
+                        <th class="px-4 py-2 border">EsRegistro</th>
+                        <th class="px-4 py-2 border">Acciones</th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -39,7 +43,10 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-2 border">{{ $account->code }}</td>
                             <td class="px-4 py-2 border">{{ $account->name }}</td>
+                            <td class="px-4 py-2 border">{{ $account->accountType->name }}</td>
                             <td class="px-4 py-2 border">{{ $account->equivalent_code }}</td>
+                            <td class="px-4 py-2 border">{{ $account->isrecord }}</td>
+                            <td class="px-4 py-2 border">editar / eliminar</td>
                         </tr>
                     @empty
                         <tr>

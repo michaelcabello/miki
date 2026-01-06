@@ -19,7 +19,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-wrap gap-4 justify-between items-center">
         <!-- Buscar -->
         <div class="relative w-full md:w-1/3">
-            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar rol..."
+            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar Categoria del Post"
                 class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring focus:ring-blue-500" />
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                 <i class="fa-solid fa-search"></i>
@@ -65,7 +65,10 @@
 
 
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">
-                        Permisos</th>
+                       Descripción</th>
+
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">
+                       Estado</th>
 
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">
                         Acciones</th>
@@ -94,9 +97,17 @@
 
 
                         <!-- Otros campos -->
-                        <td class="px-4 py-3 text-center"> </td>
+                        <td class="px-4 py-3 text-center">
+                            {{ $categorypost->description }}
+                        </td>
 
-
+                        <td class="px-4 py-3 text-center">
+                            @if($categorypost->state)
+                                <span wire:click="toggleStatus({{ $categorypost->id }})" class="cursor-pointer px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Activo</span>
+                            @else
+                                <span wire:click="toggleStatus({{ $categorypost->id }})" class="cursor-pointer px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Inactivo</span>
+                            @endif
+                        </td>
 
 
                         <!-- Acciones -->
