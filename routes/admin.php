@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\admin\UserImportController;
 use App\Livewire\Admin\PermissionList;
 use App\Http\Controllers\admin\RoleController;
+use App\Http\Controllers\admin\WarehouseController;
 use App\Livewire\Admin\AccountList;
 use App\Livewire\Admin\CategoryCreate;
 use App\Livewire\Admin\CategoryEdit;
@@ -83,3 +84,5 @@ Route::view('/contacts/{contact}', 'livewire.admin.contacts.show')->name('contac
 Route::resource('leads', ContactController::class)->names('admin.contacts');
 
 Route::resource('categoryposts', CategorypostController::class)->names('admin.categoryposts');
+
+Route::resource('warehouses', WarehouseController::class)->names('admin.warehouses');

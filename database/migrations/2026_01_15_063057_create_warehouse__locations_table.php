@@ -34,6 +34,9 @@ return new class extends Migration
                 ->constrained('warehouse_locations')
                 ->cascadeOnDelete();
 
+            //$table->unsignedBigInteger('parent_id')->nullable();
+            //$table->foreign('parent_id')->references('id')->on('warehouse_locations')->onDelete('cascade');
+
             // 🔹 Tipo de ubicación (igual a Odoo)
             $table->enum('usage', [
                 'view',        // solo para agrupar (no almacena stock)
