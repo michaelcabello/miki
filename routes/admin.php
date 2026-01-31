@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserExportController;
 
 use App\Exports\UsersExport;
 use App\Http\Controllers\admin\AccountController;
+use App\Http\Controllers\Admin\Attribute\AttributeController;
 use App\Http\Controllers\admin\CategoryController;
 use App\Http\Controllers\Admin\CategorypostController;
 use App\Http\Controllers\Admin\ContactController;
@@ -86,3 +87,5 @@ Route::resource('leads', ContactController::class)->names('admin.contacts');
 Route::resource('categoryposts', CategorypostController::class)->names('admin.categoryposts');
 
 Route::resource('warehouses', WarehouseController::class)->names('admin.warehouses');
+
+Route::resource('attributes', AttributeController::class)->names('admin.attributes');

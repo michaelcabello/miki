@@ -29,10 +29,10 @@ class Brand extends Model
 
 
     //Relacion uno a muchos
-    public function productfamilies()
+   /*  public function productfamilies()
     {
         return $this->hasMany(Productfamilie::class);
-    }
+    } */
 
     //Relacion uno a muchos
     public function modellos()

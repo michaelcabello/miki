@@ -21,9 +21,9 @@ return new class extends Migration
             $table->string('name');
 
             // Relación con la variante (SKU)
-            $table->foreignId('productatribute_id')
+            /* $table->foreignId('productatribute_id')
                 ->constrained('productatributes')
-                ->cascadeOnDelete();
+                ->cascadeOnDelete(); */
 
             // Campos de trazabilidad (como Odoo)
             //Fecha de caducidad del lote o serie.
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Un serial/lote no puede repetirse dentro del mismo producto
-            $table->unique(['productatribute_id', 'name']);
+            //$table->unique(['productatribute_id', 'name']);
         });
     }
 

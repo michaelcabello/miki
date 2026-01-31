@@ -9,14 +9,10 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    //php artisan make:model Groupatribute -m
     public function up(): void
     {
-        Schema::create('groupatributes', function (Blueprint $table) {
+        Schema::create('product_templates', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->boolean('state')->default(false);
-            $table->integer('order')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('groupatributes');
+        Schema::dropIfExists('product_templates');
     }
 };

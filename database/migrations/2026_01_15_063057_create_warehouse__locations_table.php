@@ -29,10 +29,10 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             // 🔹 Relación recursiva (ubicación padre)
-            $table->foreignId('parent_id')
+            /* $table->foreignId('parent_id')
                 ->nullable()
                 ->constrained('warehouse_locations')
-                ->cascadeOnDelete();
+                ->cascadeOnDelete(); */
 
             //$table->unsignedBigInteger('parent_id')->nullable();
             //$table->foreign('parent_id')->references('id')->on('warehouse_locations')->onDelete('cascade');

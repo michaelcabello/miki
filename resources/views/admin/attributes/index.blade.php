@@ -1,11 +1,11 @@
-<x-layouts.app :title="__('Usuarios')">
+<x-layouts.app :title="__('Attributes')">
     <div class="flex flex-col gap-6">
 
         <!-- Breadcrumb -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow px-6 py-3">
             <x-breadcrumb :links="[
                 'Dashboard' => 'dashboard',
-                'Usuarios' => '#',
+                'Attributtes' => '#',
             ]" />
         </div>
 
@@ -14,7 +14,9 @@
 
             <!-- Encabezado -->
 
-            @livewire('admin.user-list')
+
+
+             @livewire('admin.attribute.index')
 
 
         </div>
