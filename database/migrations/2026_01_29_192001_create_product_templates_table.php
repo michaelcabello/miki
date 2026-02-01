@@ -13,6 +13,17 @@ return new class extends Migration
     {
         Schema::create('product_templates', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('slug')->unique();
+
+            $table->enum('type', ['goods', 'service', 'combo'])->default('goods');
+
+            $table->boolean('sale_ok')->default(true);
+            $table->boolean('purchase_ok')->default(false);
+            $table->boolean('pos_ok')->default(true);
+
+            $table->boolean('active')->default(true);
+
             $table->timestamps();
         });
     }

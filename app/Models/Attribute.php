@@ -7,9 +7,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attribute extends Model
 {
+    protected $table = 'attributes';
     protected $fillable = ['name', 'state', 'order'];
 
-    public function attributevalues(): HasMany
+    /* public function attributevalues(): HasMany
+    {
+        return $this->hasMany(AttributeValue::class);
+    } */
+
+    public function values()
     {
         return $this->hasMany(AttributeValue::class);
     }

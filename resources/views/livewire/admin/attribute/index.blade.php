@@ -134,16 +134,13 @@
                                 wire:key="user-checkbox-{{ $attribute->id }}">
                         </td>
 
-
                         <!-- ID -->
                         <td class="px-4 py-3 text-center">{{ $attribute->id }}</td>
 
                         <!-- Nombre con resaltado -->
                         <td class="px-4 py-3 text-center">
-                          {{$attribute->name}}
+                          <a href={{ route('admin.attributes.values', $attribute) }} class="text-blue-600 hover:underline">{{$attribute->name}}</a>
                         </td>
-
-
 
 
                         <!-- Estado -->

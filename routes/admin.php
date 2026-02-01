@@ -20,7 +20,9 @@ use App\Livewire\Admin\AccountList;
 use App\Livewire\Admin\CategoryCreate;
 use App\Livewire\Admin\CategoryEdit;
 use App\Livewire\Admin\CategoryList;
-
+use App\Livewire\Admin\Attribute\AttributeValueManager;
+use App\Livewire\Admin\Product\ProductCreate;
+use App\Livewire\Admin\Products\ProductCreate as ProductsProductCreate;
 use Livewire\Volt\Volt;
 
 Route::get('/hola', function () {
@@ -89,3 +91,9 @@ Route::resource('categoryposts', CategorypostController::class)->names('admin.ca
 Route::resource('warehouses', WarehouseController::class)->names('admin.warehouses');
 
 Route::resource('attributes', AttributeController::class)->names('admin.attributes');
+
+//Route::resource('attributes/{attribute}', AttributevalueController::class)->names('admin.attributevalues');
+
+Route::get('attributes/{attribute}/values', AttributeValueManager::class)->name('admin.attributes.values');
+Route::get('products/create', ProductsProductCreate::class)->name('admin.products.create');
+

@@ -44,6 +44,7 @@
                         ['title' => 'Plan Contable', 'img' => 'contable.jpg', 'route' => route('admin.accounts.index')],
                         ['title' => 'Categoría de Posts', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Almacenes', 'img' => 'contable.jpg', 'route' => route('admin.warehouses.index')],
+                         ['title' => 'Atributos', 'img' => 'contable.jpg', 'route' => route('admin.attributes.index')],
 
                     ];
                 @endphp
