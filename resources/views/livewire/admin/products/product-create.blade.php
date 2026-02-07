@@ -47,6 +47,14 @@
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <i class="fa-solid fa-layer-group mr-2"></i> Atributos y variantes
                 </button>
+
+                <button type="button" wire:click="setTab('precios')"
+                    class="px-4 py-2 rounded-t-xl text-sm font-semibold transition
+                        {{ $tab === 'precios'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fa-solid fa-layer-group mr-2"></i> Precios
+                </button>
             </div>
         </div>
 
@@ -69,7 +77,7 @@
                     </div>
 
                     <!-- Tipo / Precio base -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tipo</label>
                             <select wire:model.defer="type"
@@ -83,7 +91,7 @@
 
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                Precio base (variante default)
+                                Precio Venta base (variante default)
                             </label>
                             <input wire:model.defer="base_price_sale" type="number" step="0.01" min="0"
                                 placeholder="0.00"
@@ -93,7 +101,81 @@
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
+
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Precio Costo
+                            </label>
+                            <input wire:model.defer="base_price_sale" type="number" step="0.01" min="0"
+                                placeholder="0.00"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                            @error('base_price_sale')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                     </div>
+
+
+
+                    {{-- UoM --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- UoM (venta/stock) --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Unidad de medida (Venta / Stock)
+                            </label>
+
+                            <select wire:model.defer="uom_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                         bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+
+                                @foreach ($uomCategories as $cat)
+                                    <optgroup label="{{ $cat['name'] }}">
+                                        @foreach ($cat['uoms'] as $uom)
+                                            <option value="{{ $uom['id'] }}">
+                                                {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+
+                            @error('uom_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-500 mt-1">Esta es la unidad base para inventario y ventas.</p>
+                        </div>
+
+                        {{-- UoM compra --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Unidad de compra (opcional)
+                            </label>
+
+                            <select wire:model.defer="uom_po_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+
+                                @foreach ($uomPurchaseOptions as $uom)
+                                    <option value="{{ $uom['id'] }}">
+                                        {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('uom_po_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-500 mt-1">Debe ser de la misma categoría que la UoM base.</p>
+                        </div>
+                    </div>
+
+
 
                     <!-- SKU Prefijo -->
                     <div>
@@ -104,6 +186,67 @@
                                    bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                         <p class="text-xs text-gray-500 mt-1">Se usa para generar SKUs: CAM-12-XL-NEGRO</p>
                     </div>
+
+
+
+
+                    {{-- UoM --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- UoM (venta/stock) --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Categoría
+                            </label>
+
+                            <select wire:model.defer="uom_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                         bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+
+                                @foreach ($uomCategories as $cat)
+                                    <optgroup label="{{ $cat['name'] }}">
+                                        @foreach ($cat['uoms'] as $uom)
+                                            <option value="{{ $uom['id'] }}">
+                                                {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+
+                            @error('uom_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-500 mt-1">Esta es la unidad base para inventario y ventas.</p>
+                        </div>
+
+                        {{-- UoM compra --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Impuesto
+                            </label>
+
+                            <select wire:model.defer="uom_po_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+
+                                @foreach ($uomPurchaseOptions as $uom)
+                                    <option value="{{ $uom['id'] }}">
+                                        {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('uom_po_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-500 mt-1">Debe ser de la misma categoría que la UoM base.</p>
+                        </div>
+                    </div>
+
+
+
 
                     <!-- Checks -->
                     <div class="flex flex-wrap items-center gap-4 pt-7">

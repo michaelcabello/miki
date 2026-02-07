@@ -4,6 +4,8 @@ namespace App\Livewire\Admin\Products;
 
 use Livewire\Component;
 
+use App\Models\UomCategory;
+use App\Models\Uom;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Models\ProductTemplate;
@@ -24,6 +26,12 @@ class ProductCreate extends Component
 
     public array $attributeLines = []; // líneas estilo Odoo
     public $catalogAttributes = [];
+
+    public ?int $uom_id = null;
+    public ?int $uom_po_id = null;
+
+    public array $uomCategories = [];      // para el select agrupado
+    public array $uomPurchaseOptions = []; // opciones filtradas por categoría
 
 
 
@@ -51,7 +59,7 @@ class ProductCreate extends Component
         $this->attributeLines = []; // sin atributos al inicio
         $this->recalcVariants();
 
-         $this->catalogAttributes = Attribute::query()
+        $this->catalogAttributes = Attribute::query()
             ->where('state', true)
             ->with(['values' => function ($q) {
                 $q->where('active', true)->orderBy('sort_order');
@@ -62,7 +70,62 @@ class ProductCreate extends Component
 
         //$this->attributeLines = [];
         //$this->recalcVariants();
+
+        // Categorías + UoMs (para el select principal)
+        $this->uomCategories = UomCategory::query()
+            ->where('active', true)
+            ->with(['uoms' => function ($q) {
+                $q->where('active', true)->orderBy('sort_order')->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get()
+            ->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'uoms' => $cat->uoms->map(fn($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'symbol' => $u->symbol,
+                ])->toArray(),
+            ])->toArray();
+
+        // Si ya hay uom_id, cargar opciones compra
+        $this->refreshPurchaseUoms();
     }
+
+    public function updatedUomId($value): void
+    {
+        // Si cambió la UoM base, resetea la de compra y recarga opciones
+        $this->uom_po_id = null;
+        $this->refreshPurchaseUoms();
+    }
+
+    private function refreshPurchaseUoms(): void
+    {
+        if (! $this->uom_id) {
+            $this->uomPurchaseOptions = [];
+            return;
+        }
+
+        $base = Uom::query()->find($this->uom_id);
+
+        if (! $base) {
+            $this->uomPurchaseOptions = [];
+            return;
+        }
+
+        // Solo UoMs de la MISMA categoría (como Odoo)
+        $this->uomPurchaseOptions = Uom::query()
+            ->where('active', true)
+            ->where('uom_category_id', $base->uom_category_id)
+            ->orderByRaw("FIELD(uom_type, 'reference', 'bigger', 'smaller')") // opcional
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'symbol'])
+            ->toArray();
+    }
+
+
 
     public function addAttributeLine(): void
     {

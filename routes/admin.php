@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\Attribute\AttributeController;
 use App\Http\Controllers\admin\CategoryController;
 use App\Http\Controllers\Admin\CategorypostController;
 use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\Pricelist\PricelistController;
 use Maatwebsite\Excel\Facades\Excel;
 
 use App\Http\Controllers\admin\UserImportController;
@@ -97,3 +98,4 @@ Route::resource('attributes', AttributeController::class)->names('admin.attribut
 Route::get('attributes/{attribute}/values', AttributeValueManager::class)->name('admin.attributes.values');
 Route::get('products/create', ProductsProductCreate::class)->name('admin.products.create');
 
+Route::resource('pricelists', PricelistController::class)->names('admin.pricelists');

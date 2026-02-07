@@ -24,6 +24,19 @@ return new class extends Migration
 
             $table->boolean('active')->default(true);
 
+            $table->foreignId('uom_id')
+                ->nullable()
+                ->constrained('uoms')
+                ->nullOnDelete();
+
+            $table->foreignId('uom_po_id')
+                ->nullable()
+                ->constrained('uoms')
+                ->nullOnDelete();
+
+            $table->index(['uom_id']);
+            $table->index(['uom_po_id']);
+
             $table->timestamps();
         });
     }

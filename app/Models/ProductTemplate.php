@@ -12,8 +12,14 @@ class ProductTemplate extends Model
         'name',
         'slug',
         'description',
-        'active'
-        // 'price_base' // si lo usas
+        'active',
+        'type',
+        'sale_ok',
+        'purchase_ok',
+        'pos_ok',
+        'active',
+        'uom_id',
+        'uom_po_id'
     ];
 
     /* public function variants(): HasMany
@@ -25,6 +31,22 @@ class ProductTemplate extends Model
     {
         return $this->hasOne(ProductVariant::class)->where('is_default', true);
     } */
+
+    public function uom()
+    {
+        return $this->belongsTo(Uom::class, 'uom_id');
+    }
+
+    public function purchaseUom()
+    {
+        return $this->belongsTo(Uom::class, 'uom_po_id');
+    }
+
+    public function packagings()
+    {
+        return $this->hasMany(ProductPackaging::class);
+    }
+
 
 
     public function attributeLines()
@@ -42,4 +64,6 @@ class ProductTemplate extends Model
         return $this->hasOne(\App\Models\ProductVariant::class)
             ->where('is_default', true);
     }
+
+
 }
