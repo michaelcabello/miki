@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Pricelist;
 
 use App\Models\Pricelist;
 use App\Http\Controllers\Controller;
+use App\Models\Currency;
 use Illuminate\Http\Request;
 
 //php artisan make:controller Admin/Pricelist/PricelistController --resource --model=Pricelist
@@ -22,7 +23,8 @@ class PricelistController extends Controller
      */
     public function create()
     {
-        //
+        $currencies = Currency::where('state', true)->orderBy('name')->get();
+        return view('admin.pricelists.create', compact('currencies'));
     }
 
     /**
@@ -30,7 +32,41 @@ class PricelistController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:255', 'unique:pricelists,name'],
+            'currency_id' => ['required', 'exists:currencies,id'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'state' => ['nullable', 'boolean'],
+            'is_default' => ['nullable', 'boolean'],
+        ]);
+
+        $state = $request->boolean('state');
+        $isDefault = $request->boolean('is_default');
+
+         // Si marca default, desmarca las demás (solo 1 default)
+        if ($isDefault) {
+            Pricelist::where('is_default', true)->update(['is_default' => false]);
+        }
+
+        Pricelist::create([
+            'name' => trim(mb_strtolower($validated['name'])) === 'default'
+                ? 'Default'
+                : trim($validated['name']),
+            'currency_id' => $validated['currency_id'],
+            'notes' => $validated['notes'] ?? null,
+            'state' => $state,
+            'is_default' => $isDefault,
+        ]);
+
+        session()->flash('swal', [
+            'icon' => 'success',
+            'title' => 'Bien Hecho',
+            'text' => 'Lista de precios creada correctamente',
+        ]);
+
+        return redirect()->route('admin.pricelists.index');
+
+
     }
 
     /**

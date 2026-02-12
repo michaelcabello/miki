@@ -19,18 +19,11 @@ class ProductTemplate extends Model
         'pos_ok',
         'active',
         'uom_id',
-        'uom_po_id'
+        'uom_po_id',
+        'category_id',
     ];
 
-    /* public function variants(): HasMany
-    {
-        return $this->hasMany(ProductVariant::class);
-    }
 
-    public function defaultVariant(): HasOne
-    {
-        return $this->hasOne(ProductVariant::class)->where('is_default', true);
-    } */
 
     public function uom()
     {
@@ -56,13 +49,14 @@ class ProductTemplate extends Model
 
     public function variants()
     {
-        return $this->hasMany(\App\Models\ProductVariant::class);
+        return $this->hasMany(ProductVariant::class);
     }
 
-    public function defaultVariant()
+    //public function defaultVariant()
+    public function nonDefaultVariants()
     {
-        return $this->hasOne(\App\Models\ProductVariant::class)
-            ->where('is_default', true);
+        return $this->hasOne(ProductVariant::class)
+            ->where('is_default', 0);
     }
 
 

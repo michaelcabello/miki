@@ -34,6 +34,16 @@ return new class extends Migration
                 ->constrained('uoms')
                 ->nullOnDelete();
 
+            $table->unsignedBigInteger('category_id')->nullable();
+
+            // nombre corto para evitar "identifier too long"
+            $table->foreign('category_id', 'fk_pt_category')
+                ->references('id')->on('categories')
+                ->nullOnDelete();
+
+            $table->index(['category_id'], 'i_pt_category');
+
+
             $table->index(['uom_id']);
             $table->index(['uom_po_id']);
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\admin\CategoryController;
 use App\Http\Controllers\Admin\CategorypostController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\Pricelist\PricelistController;
+use App\Http\Controllers\Admin\Product\ProductController;
 use Maatwebsite\Excel\Facades\Excel;
 
 use App\Http\Controllers\admin\UserImportController;
@@ -24,7 +25,10 @@ use App\Livewire\Admin\CategoryList;
 use App\Livewire\Admin\Attribute\AttributeValueManager;
 use App\Livewire\Admin\Product\ProductCreate;
 use App\Livewire\Admin\Products\ProductCreate as ProductsProductCreate;
+use App\Livewire\Admin\Pricelist\PricelistItemManager;
+use App\Livewire\Admin\Products\VariantsIndex;
 use Livewire\Volt\Volt;
+
 
 Route::get('/hola', function () {
     return '¡Hola desde el admin!';
@@ -99,3 +103,7 @@ Route::get('attributes/{attribute}/values', AttributeValueManager::class)->name(
 Route::get('products/create', ProductsProductCreate::class)->name('admin.products.create');
 
 Route::resource('pricelists', PricelistController::class)->names('admin.pricelists');
+Route::get('pricelist/{pricelist}/items', PricelistItemManager::class)->name('admin.pricelists.items');
+Route::get('products', [ProductController::class, 'index'])->name('admin.products.index');
+
+Route::get('admin/products/{product_template}/variants', VariantsIndex::class)->name('admin.products.variants');

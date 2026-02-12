@@ -43,9 +43,16 @@ class DatabaseSeeder extends Seeder
             SubAccountTypeSeeder::class,
             AccountTypeSeeder::class,
             AccountSeeder::class,
-           // TenantsTableSeeder::class,
+            // TenantsTableSeeder::class,
         ]);
 
 
+        $this->call(PricelistsTableSeeder::class);
+        $this->call(AttributesTableSeeder::class);
+        $this->call(AttributeValuesTableSeeder::class);
+        $this->call([
+            UomSeeder::class,
+        ]);
+        $this->call(CategoriesTableSeeder::class);
     }
 }

@@ -8,6 +8,7 @@ use App\Models\UomCategory;
 use App\Models\Uom;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
+use App\Models\Category;
 use App\Models\ProductTemplate;
 use App\Models\ProductVariant;
 use Illuminate\Support\Str;
@@ -29,6 +30,9 @@ class ProductCreate extends Component
 
     public ?int $uom_id = null;
     public ?int $uom_po_id = null;
+
+    public $category_id = null;
+    public array $categoryOptions = [];
 
     public array $uomCategories = [];      // para el select agrupado
     public array $uomPurchaseOptions = []; // opciones filtradas por categoría
@@ -91,7 +95,36 @@ class ProductCreate extends Component
 
         // Si ya hay uom_id, cargar opciones compra
         $this->refreshPurchaseUoms();
+
+        $tree = Category::whereNull('parent_id')
+            ->orderBy('order')
+            ->orderBy('name')
+            ->with('childrenRecursive')
+            ->get();
+
+        $this->categoryOptions = $this->flattenCategories($tree);
     }
+
+    private function flattenCategories($categories, int $level = 0): array
+    {
+        $out = [];
+
+        foreach ($categories as $cat) {
+            $out[] = [
+                'id' => $cat->id,
+                'label' => str_repeat('— ', $level) . $cat->name,
+            ];
+
+            if ($cat->childrenRecursive && $cat->childrenRecursive->count()) {
+                $out = array_merge($out, $this->flattenCategories($cat->childrenRecursive, $level + 1));
+            }
+        }
+
+        return $out;
+    }
+
+
+
 
     public function updatedUomId($value): void
     {
@@ -273,6 +306,7 @@ class ProductCreate extends Component
             'purchase_ok' => ['boolean'],
             'pos_ok' => ['boolean'],
             'active' => ['boolean'],
+            'category_id' => ['nullable', 'exists:categories,id'],
         ]);
 
         $name = trim($this->name);
@@ -294,6 +328,11 @@ class ProductCreate extends Component
             'purchase_ok' => $this->purchase_ok,
             'pos_ok' => $this->pos_ok,
             'active' => $this->active,
+
+            'category_id' => $this->category_id ?: null,
+
+            'uom_id' => $this->uom_id ?: null, //unidad de medida de venta
+            'uom_po_id' => $this->uom_po_id ?: null, //unidad de medida de compra
         ]);
 
         // 2) Procesar selección (atributos->valores)
@@ -373,6 +412,7 @@ class ProductCreate extends Component
 
             $first = false;
         }
+
 
         return redirect()->route('admin.products.index')
             ->with('swal', ['icon' => 'success', 'title' => 'Listo', 'text' => 'Producto creado con variantes']);

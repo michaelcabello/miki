@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pricelists', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique(); // Default, Mayorista, POS Promo
-            $table->boolean('active')->default(true);
+            $table->boolean('state')->default(true);
 
             // lista por defecto según canal
             $table->boolean('is_default')->default(false);

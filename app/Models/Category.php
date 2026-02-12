@@ -55,4 +55,22 @@ class Category extends Model
             }
         });
     }
+    //para listar en productos
+    // Carga el árbol completo: hijos -> hijos -> hijos...
+    public function childrenRecursive()
+    {
+        return $this->hasMany(Category::class, 'parent_id')
+            ->orderBy('order')
+            ->orderBy('name')
+            ->with('childrenRecursive');
+    }
+
+    // (Opcional) Scope para traer todo el árbol desde las raíces
+    public function scopeTree($query)
+    {
+        return $query->whereNull('parent_id')
+            ->orderBy('order')
+            ->orderBy('name')
+            ->with('childrenRecursive');
+    }
 }

@@ -45,8 +45,8 @@
                         ['title' => 'Categoría de Posts', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Almacenes', 'img' => 'contable.jpg', 'route' => route('admin.warehouses.index')],
                         ['title' => 'Atributos', 'img' => 'contable.jpg', 'route' => route('admin.attributes.index')],
-                        ['title' => 'Productos', 'img' => 'contable.jpg', 'route' => route('admin.products.create')],
-                        ['title' => 'Lista de precios', 'img' => 'contable.jpg', 'route' => route('admin.products.create')],
+                        ['title' => 'Productos', 'img' => 'contable.jpg', 'route' => route('admin.products.index')],
+                        ['title' => 'Lista de precios', 'img' => 'contable.jpg', 'route' => route('admin.pricelists.index')],
 
 
                     ];

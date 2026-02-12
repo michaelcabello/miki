@@ -28,6 +28,12 @@ class AttributeValueManager extends Component
 
 
 
+    // Dentro de tu clase AttributeValueManager
+    public function mount(Attribute $attribute)
+    {
+        $this->attribute = $attribute;
+    }
+
 
     public function updatingSearch()
     {
@@ -35,7 +41,7 @@ class AttributeValueManager extends Component
     }
 
 
- public function startEdit(int $id): void
+    public function startEdit(int $id): void
     {
         $value = AttributeValue::where('attribute_id', $this->attribute->id)->findOrFail($id);
 
@@ -157,7 +163,7 @@ class AttributeValueManager extends Component
         $values = AttributeValue::query()
             ->where('attribute_id', $this->attribute->id)
             ->when($this->search !== '', function ($q) {
-                $q->where('name', 'like', '%'.$this->search.'%');
+                $q->where('name', 'like', '%' . $this->search . '%');
             })
             ->orderByRaw('COALESCE(sort_order, 999999) asc')
             ->orderBy('id', 'asc')
@@ -171,5 +177,4 @@ class AttributeValueManager extends Component
     {
         return view('livewire.admin.attribute.attribute-value-manager');
     } */
-
 }

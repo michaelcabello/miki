@@ -55,6 +55,21 @@
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <i class="fa-solid fa-layer-group mr-2"></i> Precios
                 </button>
+
+                <button type="button" wire:click="setTab('pdv')"
+                    class="px-4 py-2 rounded-t-xl text-sm font-semibold transition
+                        {{ $tab === 'pdv'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fa-solid fa-layer-group mr-2"></i> Punto de venta
+                </button>
+                <button type="button" wire:click="setTab('accounting')"
+                    class="px-4 py-2 rounded-t-xl text-sm font-semibold transition
+                        {{ $tab === 'accounting'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fa-solid fa-layer-group mr-2"></i> Contabilidad
+                </button>
             </div>
         </div>
 
@@ -64,29 +79,33 @@
             {{-- TAB: GENERAL --}}
             @if ($tab === 'general')
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <!-- Nombre -->
-                    <div>
+
+                    {{-- 1) Nombre --}}
+                    <div class="md:col-span-2">
                         <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Nombre</label>
-                        <input wire:model.defer="name" type="text" placeholder="Ej: Camisa de vestir"
+                        <input wire:model.defer="name" type="text" placeholder="Ej: Agua mineral 500ml"
                             class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                   bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
-                                   focus:ring-4 focus:ring-indigo-500/25 focus:border-indigo-400 shadow-sm">
+                   bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
+                   focus:ring-4 focus:ring-indigo-500/25 focus:border-indigo-400 shadow-sm">
                         @error('name')
                             <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Tipo / Precio base -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {{-- 2) Tipo + Precios (3 columnas) --}}
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tipo</label>
                             <select wire:model.defer="type"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="goods">Bienes</option>
                                 <option value="service">Servicio</option>
                                 <option value="combo">Combo</option>
                             </select>
+                            @error('type')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div>
@@ -96,43 +115,38 @@
                             <input wire:model.defer="base_price_sale" type="number" step="0.01" min="0"
                                 placeholder="0.00"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                             @error('base_price_sale')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
-
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                Precio Costo
+                                Costo
                             </label>
-                            <input wire:model.defer="base_price_sale" type="number" step="0.01" min="0"
+                            <input wire:model.defer="base_cost" type="number" step="0.01" min="0"
                                 placeholder="0.00"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                            @error('base_price_sale')
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                            @error('base_cost')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-
                     </div>
 
+                    {{-- 3) FILA 1 (4 campos): UoM Venta/Stock, UoM Compra, SKU Prefijo, Categoría --}}
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
 
-
-                    {{-- UoM --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- UoM (venta/stock) --}}
+                        {{-- UoM base --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                Unidad de medida (Venta / Stock)
+                                U. Medida (Venta / Stock)
                             </label>
-
                             <select wire:model.defer="uom_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                         bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Seleccionar --</option>
-
                                 @foreach ($uomCategories as $cat)
                                     <optgroup label="{{ $cat['name'] }}">
                                         @foreach ($cat['uoms'] as $uom)
@@ -143,113 +157,202 @@
                                     </optgroup>
                                 @endforeach
                             </select>
-
                             @error('uom_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
-                            <p class="text-xs text-gray-500 mt-1">Esta es la unidad base para inventario y ventas.</p>
                         </div>
 
                         {{-- UoM compra --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                Unidad de compra (opcional)
+                                U. Compra (opcional)
                             </label>
-
                             <select wire:model.defer="uom_po_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Seleccionar --</option>
-
                                 @foreach ($uomPurchaseOptions as $uom)
                                     <option value="{{ $uom['id'] }}">
                                         {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
                                     </option>
                                 @endforeach
                             </select>
-
                             @error('uom_po_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
-                            <p class="text-xs text-gray-500 mt-1">Debe ser de la misma categoría que la UoM base.</p>
                         </div>
-                    </div>
 
+                        {{-- SKU prefijo --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                SKU Prefijo (opcional)
+                            </label>
+                            <input wire:model.defer="sku_prefix" type="text" placeholder="Ej: AGUA"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                            @error('sku_prefix')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-
-                    <!-- SKU Prefijo -->
-                    <div>
-                        <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">SKU Prefijo
-                            (opcional)</label>
-                        <input wire:model.defer="sku_prefix" type="text" placeholder="Ej: CAM"
-                            class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                   bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                        <p class="text-xs text-gray-500 mt-1">Se usa para generar SKUs: CAM-12-XL-NEGRO</p>
-                    </div>
-
-
-
-
-                    {{-- UoM --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- UoM (venta/stock) --}}
+                        {{-- Categoría --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
                                 Categoría
                             </label>
 
-                            <select wire:model.defer="uom_id"
-                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                         bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                <option value="">-- Seleccionar --</option>
-
-                                @foreach ($uomCategories as $cat)
-                                    <optgroup label="{{ $cat['name'] }}">
-                                        @foreach ($cat['uoms'] as $uom)
-                                            <option value="{{ $uom['id'] }}">
-                                                {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endforeach
-                            </select>
-
-                            @error('uom_id')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                            <p class="text-xs text-gray-500 mt-1">Esta es la unidad base para inventario y ventas.</p>
-                        </div>
-
-                        {{-- UoM compra --}}
-                        <div>
-                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                Impuesto
-                            </label>
-
-                            <select wire:model.defer="uom_po_id"
+                            <select wire:model.defer="category_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
                                  bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Seleccionar --</option>
 
-                                @foreach ($uomPurchaseOptions as $uom)
-                                    <option value="{{ $uom['id'] }}">
-                                        {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
-                                    </option>
+                                @foreach ($categoryOptions as $c)
+                                    <option value="{{ $c['id'] }}">{{ $c['label'] }}</option>
                                 @endforeach
                             </select>
-
-                            @error('uom_po_id')
+                            @error('category_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
-                            <p class="text-xs text-gray-500 mt-1">Debe ser de la misma categoría que la UoM base.</p>
+
                         </div>
+
+
                     </div>
 
+                    {{-- 4) FILA 2 (4 campos): Impuesto, Detracción, Código de barras, Referencia --}}
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                        {{-- Impuesto --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Impuesto</label>
+                            <select wire:model.defer="tax_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Sin impuesto --</option>
+                                {{--  @foreach ($taxes as $tax)
+                                    <option value="{{ $tax->id }}">{{ $tax->name }}</option>
+                                @endforeach --}}
+                            </select>
+                            @error('tax_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Detracción --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Detracción</label>
+                            <select wire:model.defer="detraction_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- No aplica --</option>
+                                {{--  @foreach ($detractions as $d)
+                                    <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                @endforeach --}}
+                            </select>
+                            @error('detraction_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Código de barras --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Código de
+                                barras</label>
+                            <input wire:model.defer="barcode" type="text" placeholder="Ej: 7751234567890"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                            @error('barcode')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Referencia --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Referencia</label>
+                            <input wire:model.defer="reference" type="text"
+                                placeholder="Ej: SKU proveedor / código interno"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                            @error('reference')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                    </div>
+
+                    {{-- 5) FILA 3: Marca, Modelo, Rastrear inventario, Cantidad a la mano --}}
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                        {{-- Marca --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Marca</label>
+                            <select wire:model.defer="brand_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+                                {{--  @foreach ($brands as $b)
+                                    <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                @endforeach --}}
+                            </select>
+                            @error('brand_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Modelo --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Modelo</label>
+                            <select wire:model.defer="model_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+                                {{-- @foreach ($models as $m)
+                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                @endforeach --}}
+                            </select>
+                            @error('model_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
 
 
 
-                    <!-- Checks -->
-                    <div class="flex flex-wrap items-center gap-4 pt-7">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Rastrear
+                                inventario</label>
+                            <select wire:model.defer="model_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="">-- Por Cantidad --</option>
+                                <option value="">-- Por Serie --</option>
+                                <option value="">-- Por Lote --</option>
+                                {{-- @foreach ($models as $m)
+                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                @endforeach --}}
+                            </select>
+                            @error('model_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Cantidad a la mano --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Cantidad a la
+                                mano</label>
+                            <input wire:model.defer="qty_on_hand" type="number" step="0.01" min="0"
+                                placeholder="0" {{-- @disabled(!$track_inventory) --}}
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 disabled:opacity-50">
+                            @error('qty_on_hand')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                    </div>
+
+                    {{-- 6) Checks finales --}}
+                    <div class="md:col-span-2 flex flex-wrap items-center gap-4 pt-2">
                         <label class="inline-flex items-center gap-2">
                             <input type="checkbox" class="w-5 h-5" wire:model.defer="sale_ok">
                             <span class="text-sm text-gray-700 dark:text-gray-200">Ventas</span>
@@ -270,7 +373,9 @@
                             <span class="text-sm text-gray-700 dark:text-gray-200">Activo</span>
                         </label>
                     </div>
+
                 </div>
+
             @endif
 
             {{-- TAB: ATTRIBUTES --}}
