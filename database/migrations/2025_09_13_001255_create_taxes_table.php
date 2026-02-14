@@ -23,11 +23,6 @@ return new class extends Migration
 
             $table->integer('sequence')->default(1); // Orden de cálculo
 
-            // Relaciones M2O
-            //$table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
-            //$table->foreignId('tax_group_id')->nullable()->constrained('tax_groups')->onDelete('set null');
-            //$table->foreignId('cash_basis_transition_account_id')->nullable()->constrained('accounts')->onDelete('set null');
-
             // Flags
             $table->boolean('price_include')->default(false);
             $table->boolean('include_base_amount')->default(false);

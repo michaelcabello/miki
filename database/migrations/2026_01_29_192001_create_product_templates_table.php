@@ -41,11 +41,58 @@ return new class extends Migration
                 ->references('id')->on('categories')
                 ->nullOnDelete();
 
+
+            $table->unsignedBigInteger('sale_tax_id')->nullable();
+            $table->unsignedBigInteger('purchase_tax_id')->nullable();
+
+            $table->foreign('sale_tax_id', 'fk_pt_sale_tax')
+                ->references('id')->on('taxes')
+                ->nullOnDelete();
+
+            $table->foreign('purchase_tax_id', 'fk_pt_purchase_tax')
+                ->references('id')->on('taxes')
+                ->nullOnDelete();
+
+            /*
+    |--------------------------------------------------------------------------
+    | Marca y Modelo
+    |--------------------------------------------------------------------------
+    */
+
+            $table->unsignedBigInteger('brand_id')->nullable();
+            $table->unsignedBigInteger('modello_id')->nullable();
+
+            $table->foreign('brand_id', 'fk_pt_brand')
+                ->references('id')->on('brands')
+                ->nullOnDelete();
+
+            $table->foreign('modello_id', 'fk_pt_modello')
+                ->references('id')->on('modellos')
+                ->nullOnDelete();
+
+            $table->unsignedBigInteger('detraction_id')->nullable();
+
+            // nombre corto para evitar identifier too long
+            $table->foreign('detraction_id', 'fk_pt_detraction')
+                ->references('id')->on('detractions')
+                ->nullOnDelete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Índices
+            |--------------------------------------------------------------------------
+            */
+
+            $table->index(['uom_id'], 'i_pt_uom');
+            $table->index(['uom_po_id'], 'i_pt_uompo');
             $table->index(['category_id'], 'i_pt_category');
+            $table->index(['sale_tax_id'], 'i_pt_stax');
+            $table->index(['purchase_tax_id'], 'i_pt_ptax');
+            $table->index(['brand_id'], 'i_pt_brand');
+            $table->index(['modello_id'], 'i_pt_modello');
+            $table->index(['detraction_id'], 'i_pt_detraction');
 
 
-            $table->index(['uom_id']);
-            $table->index(['uom_po_id']);
 
             $table->timestamps();
         });

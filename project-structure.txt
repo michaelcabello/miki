@@ -1,0 +1,155 @@
+Listado de rutas de carpetas
+El n£mero de serie del volumen es 000000FF 90A7:EE0A
+C:\XAMPP\HTDOCS\ERP2027\APP
++---Exports
+|       UsersExport.php
+|       
++---Http
+|   +---Controllers
+|   |   |   Controller.php
+|   |   |   
+|   |   +---Admin
+|   |   |   |   AccountController.php
+|   |   |   |   CategoryController.php
+|   |   |   |   CategorypostController.php
+|   |   |   |   ContactController.php
+|   |   |   |   RoleController.php
+|   |   |   |   UserController.php
+|   |   |   |   UserExportController.php
+|   |   |   |   UserImportController.php
+|   |   |   |   WarehouseController.php
+|   |   |   |   
+|   |   |   +---Attribute
+|   |   |   |       AttributeController.php
+|   |   |   |       
+|   |   |   +---Pricelist
+|   |   |   |       PricelistController.php
+|   |   |   |       
+|   |   |   \---Product
+|   |   |           ProductController.php
+|   |   |           
+|   |   \---Auth
+|   |           VerifyEmailController.php
+|   |           
+|   \---Requests
+|           StoreCategoryRequest.php
+|           
++---Imports
+|       UsersImport.php
+|       
++---Jobs
+|       SendMarketingEmailJob.php
+|       
++---Livewire
+|   +---Actions
+|   |   |   Logout.php
+|   |   |   
+|   |   \---Admin
+|   \---Admin
+|       |   AccountItem.php
+|       |   AccountList.php
+|       |   AccountNavigator.php
+|       |   AccountsBrowser.php
+|       |   AccountTree.php
+|       |   CategoryCreate.php
+|       |   CategoryEdit.php
+|       |   CategoryItem.php
+|       |   CategoryItemedit.php
+|       |   CategoryItemlist.php
+|       |   CategoryList.php
+|       |   CategorypostList.php
+|       |   PermissionList.php
+|       |   RoleList.php
+|       |   ShowRolePermissionsModal.php
+|       |   UserList.php
+|       |   UsersList.php
+|       |   
+|       +---Attribute
+|       |       AttributeValueManager.php
+|       |       Index.php
+|       |       
+|       +---Pricelist
+|       |       Index.php
+|       |       PricelistItemManager.php
+|       |       
+|       +---Products
+|       |       Index.php
+|       |       ProductCreate.php
+|       |       VariantsIndex.php
+|       |       
+|       \---Warehouses
+|               Index.php
+|               
++---Mail
+|       MarketingMailable.php
+|       PasswordChanged.php
+|       
++---Models
+|       Account.php
+|       AccountType.php
+|       Attribute.php
+|       AttributeValue.php
+|       Brand.php
+|       Category.php
+|       Categorymarketing.php
+|       Categorypost.php
+|       Company.php
+|       Contact.php
+|       Currency.php
+|       Department.php
+|       District.php
+|       Employee.php
+|       Image.php
+|       Journal.php
+|       JournalType.php
+|       Lead.php
+|       LeadTag.php
+|       Local.php
+|       Marketing.php
+|       Modello.php
+|       Partner.php
+|       Photocategorypost.php
+|       Photompost.php
+|       Photopost.php
+|       Position.php
+|       Post.php
+|       Pricelist.php
+|       PricelistItem.php
+|       ProductPackaging.php
+|       ProductTemplate.php
+|       ProductTemplateAttribute.php
+|       ProductVariant.php
+|       Province.php
+|       Stage.php
+|       StockLot.php
+|       SubAccountType.php
+|       Tag.php
+|       Tax.php
+|       Uom.php
+|       UomCategory.php
+|       User.php
+|       Warehouse.php
+|       Warehouse_Location.php
+|       
++---Observers
+|       ContactObserver.php
+|       
++---Policies
+|       PermissionPolicy.php
+|       RolePolicy.php
+|       UserPolicy.php
+|       
++---Providers
+|       AppServiceProvider.php
+|       VoltServiceProvider.php
+|       
++---Services
+|       AutomationService.php
+|       
+\---View
+    \---Components
+            Breadcrumb.php
+            Display.php
+            InputError.php
+            Modal.php
+            

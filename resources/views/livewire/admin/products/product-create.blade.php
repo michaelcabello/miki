@@ -3,7 +3,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow px-6 py-3">
         <x-breadcrumb :links="[
             'Dashboard' => route('dashboard'),
-            'Productos' => route('admin.users.index'),
+            'Productos' => route('admin.products.index'),
             'Crear' => '#',
         ]" />
     </div>
@@ -225,14 +225,27 @@
                         {{-- Impuesto --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Impuesto</label>
+                            {{-- <select wire:model.defer="tax_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Sin impuesto --</option>
+                                 @foreach ($taxes as $tax)
+                                    <option value="{{ $tax->id }}">{{ $tax->name }}</option>
+                                @endforeach
+                            </select> --}}
+
                             <select wire:model.defer="tax_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Sin impuesto --</option>
-                                {{--  @foreach ($taxes as $tax)
-                                    <option value="{{ $tax->id }}">{{ $tax->name }}</option>
-                                @endforeach --}}
+                                @foreach ($taxOptions as $t)
+                                    <option value="{{ $t['id'] }}">
+                                        {{ $t['name'] }}
+                                        ({{ rtrim(rtrim(number_format($t['amount'], 2), '0'), '.') }}{{ $t['amount_type'] === 'percent' ? '%' : '' }})
+                                    </option>
+                                @endforeach
                             </select>
+
                             @error('tax_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
@@ -241,13 +254,25 @@
                         {{-- Detracción --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Detracción</label>
-                            <select wire:model.defer="detraction_id"
+                            {{-- <select wire:model.defer="detraction_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
                        bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- No aplica --</option>
-                                {{--  @foreach ($detractions as $d)
+                                  @foreach ($detractions as $d)
                                     <option value="{{ $d->id }}">{{ $d->name }}</option>
-                                @endforeach --}}
+                                @endforeach
+                            </select> --}}
+                            {{-- Detracción --}}
+                            <select wire:model.defer="detraction_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- No aplica --</option>
+                                @foreach ($detractionOptions as $d)
+                                    <option value="{{ $d['id'] }}">
+                                        {{ $d['code'] }} - {{ $d['name'] }}
+                                        ({{ rtrim(rtrim(number_format($d['rate'], 2), '0'), '.') }}%)
+                                    </option>
+                                @endforeach
                             </select>
                             @error('detraction_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -286,13 +311,22 @@
                         {{-- Marca --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Marca</label>
-                            <select wire:model.defer="brand_id"
+                            {{--  <select wire:model.defer="brand_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Seleccionar --</option>
-                                {{--  @foreach ($brands as $b)
+                                @foreach ($brands as $b)
                                     <option value="{{ $b->id }}">{{ $b->name }}</option>
-                                @endforeach --}}
+                                @endforeach
+                            </select> --}}
+
+                            <select wire:model.live="brand_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+                                @foreach ($brandOptions as $b)
+                                    <option value="{{ $b['id'] }}">{{ $b['name'] }}</option>
+                                @endforeach
                             </select>
                             @error('brand_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -302,15 +336,28 @@
                         {{-- Modelo --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Modelo</label>
-                            <select wire:model.defer="model_id"
+                            {{-- <select wire:model.defer="model_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Seleccionar --</option>
-                                {{-- @foreach ($models as $m)
+                                @foreach ($models as $m)
                                     <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                @endforeach --}}
+                                @endforeach
+                            </select> --}}
+                            <select wire:model.defer="modello_id"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                                @disabled(empty($brand_id))>
+                                <option value="">
+                                    {{ empty($brand_id) ? '-- Primero selecciona Marca --' : '-- Seleccionar --' }}
+                                </option>
+
+                                @foreach ($modelloOptions as $m)
+                                    <option value="{{ $m['id'] }}">{{ $m['name'] }}</option>
+                                @endforeach
                             </select>
-                            @error('model_id')
+
+                            @error('modello_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -320,20 +367,28 @@
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Rastrear
                                 inventario</label>
-                            <select wire:model.defer="model_id"
+                            {{-- <select wire:model.defer="model_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
                        bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Seleccionar --</option>
                                 <option value="">-- Por Cantidad --</option>
                                 <option value="">-- Por Serie --</option>
                                 <option value="">-- Por Lote --</option>
-                                {{-- @foreach ($models as $m)
+                                @foreach ($models as $m)
                                     <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                @endforeach --}}
+                                @endforeach
+                            </select> --}}
+                            <select wire:model.defer="tracking"
+                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="quantity">Por cantidad</option>
+                                <option value="serial">Por serie</option>
+                                <option value="lot">Por lote</option>
                             </select>
-                            @error('model_id')
+                            {{-- @error('model_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
+                            @enderror --}}
                         </div>
 
                         {{-- Cantidad a la mano --}}

@@ -38,7 +38,7 @@
                         ['title' => 'Categoría del Post', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Productos', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Categorías', 'img' => 'contable.jpg', 'route' => route('admin.category.list')],
-                        ['title' => 'Marca', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
+                        ['title' => 'Marca', 'img' => 'contable.jpg', 'route' => route('admin.brands.index')],
                         ['title' => 'Modelo', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Temporada', 'img' => 'contable.jpg', 'route' => route('admin.categoryposts.index')],
                         ['title' => 'Plan Contable', 'img' => 'contable.jpg', 'route' => route('admin.accounts.index')],
@@ -47,6 +47,7 @@
                         ['title' => 'Atributos', 'img' => 'contable.jpg', 'route' => route('admin.attributes.index')],
                         ['title' => 'Productos', 'img' => 'contable.jpg', 'route' => route('admin.products.index')],
                         ['title' => 'Lista de precios', 'img' => 'contable.jpg', 'route' => route('admin.pricelists.index')],
+                        ['title' => 'Impuestos', 'img' => 'contable.jpg', 'route' => route('admin.pricelists.index')],
 
 
                     ];

@@ -59,5 +59,9 @@ class ProductTemplate extends Model
             ->where('is_default', 0);
     }
 
-
+    // app/Models/ProductTemplate.php
+    public function detraction()
+    {
+        return $this->belongsTo(Detraction::class);
+    }
 }

@@ -12,6 +12,10 @@ use App\Models\Category;
 use App\Models\ProductTemplate;
 use App\Models\ProductVariant;
 use Illuminate\Support\Str;
+use App\Models\Tax;
+use App\Models\Detraction;
+use App\Models\Brand;
+use App\Models\Modello;
 
 //php artisan make:livewire Admin/Products/ProductCreate
 class ProductCreate extends Component
@@ -24,6 +28,17 @@ class ProductCreate extends Component
     public bool $purchase_ok = false;
     public bool $pos_ok = true;
     public bool $active = true;
+
+    public ?int $tax_id = null;
+    public ?int $detraction_id = null;
+    public ?int $brand_id = null;
+    public ?int $modello_id = null;
+    public ?string $tracking = 'quantity'; // quantity|serial|lot (o null)
+
+    public array $taxOptions = [];
+    public array $detractionOptions = [];
+    public array $brandOptions = [];
+    public array $modelloOptions = [];
 
     public array $attributeLines = []; // líneas estilo Odoo
     public $catalogAttributes = [];
@@ -55,6 +70,8 @@ class ProductCreate extends Component
     public array $selectedValues = [];     // [attribute_id => [value_id => true]]
 
     public string $tab = 'general';
+    public $barcode = null;
+    public $reference = null;
 
 
     public function mount(): void
@@ -74,6 +91,35 @@ class ProductCreate extends Component
 
         //$this->attributeLines = [];
         //$this->recalcVariants();
+
+        // Taxes
+        $this->taxOptions = Tax::query()
+            ->where('active', true)
+            ->orderBy('sequence')
+            ->get(['id', 'name', 'amount', 'amount_type'])
+            ->map(fn($t) => $t->toArray())
+            ->all();
+
+        // Detractions
+        $this->detractionOptions = Detraction::query()
+            ->where('active', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'rate'])
+            ->map(fn($d) => $d->toArray())
+            ->all();
+
+        // Brands
+        $this->brandOptions = Brand::query()
+            ->where('state', true)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn($b) => $b->toArray())
+            ->all();
+
+        // Modellos (vacío hasta escoger marca)
+        $this->modelloOptions = [];
+
+
 
         // Categorías + UoMs (para el select principal)
         $this->uomCategories = UomCategory::query()
@@ -104,6 +150,26 @@ class ProductCreate extends Component
 
         $this->categoryOptions = $this->flattenCategories($tree);
     }
+
+
+    public function updatedBrandId($value): void
+    {
+        $this->modello_id = null;
+
+        if (!$value) {
+            $this->modelloOptions = [];
+            return;
+        }
+
+        $this->modelloOptions = Modello::query()
+            ->where('brand_id', $value)
+            ->where('state', true)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn($m) => $m->toArray())
+            ->all();
+    }
+
 
     private function flattenCategories($categories, int $level = 0): array
     {
@@ -202,7 +268,7 @@ class ProductCreate extends Component
         return $selected;
     }
 
-    private function recalcVariants(): void
+    /* private function recalcVariants(): void
     {
         $selectedByAttr = $this->getSelectedValuesByAttributeFromLines();
 
@@ -230,7 +296,51 @@ class ProductCreate extends Component
             $parts = array_map(fn($id) => $names[$id] ?? '?', $combo);
             return implode(' - ', $parts);
         }, $combos);
+    } */
+
+    private function recalcVariants(): void
+    {
+        $selectedByAttr = $this->getSelectedValuesByAttributeFromLines();
+
+        if (empty($selectedByAttr)) {
+            $this->variants_count = 1;
+            $this->variant_preview = ['Default'];
+            return;
+        }
+
+        $groups = array_values($selectedByAttr);
+
+        $count = 1;
+        foreach ($groups as $g) {
+            $count *= count($g);
+        }
+        $this->variants_count = max(1, $count);
+
+        $combos = $this->cartesian($groups);
+        $combos = array_slice($combos, 0, $this->preview_limit);
+
+        $valueIds = collect($combos)->flatten()->unique()->values()->all();
+
+        // ✅ trae todo lo necesario de una
+        $values = AttributeValue::with('attribute')
+            ->whereIn('id', $valueIds)
+            ->get()
+            ->keyBy('id');
+
+        $this->variant_preview = array_map(function ($combo) use ($values) {
+            $parts = [];
+
+            foreach ($combo as $id) {
+                $v = $values->get($id);
+                $parts[] = $v?->name ?? '?';
+                // si quieres mostrar atributo también:
+                // $parts[] = ($v?->attribute?->name ?? 'Attr') . ': ' . ($v?->name ?? '?');
+            }
+
+            return implode(' - ', $parts);
+        }, $combos);
     }
+
 
 
     public function setTab(string $tab): void
@@ -307,7 +417,27 @@ class ProductCreate extends Component
             'pos_ok' => ['boolean'],
             'active' => ['boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
+
+            'tax_id' => ['nullable', 'exists:taxes,id'],
+            'detraction_id' => ['nullable', 'exists:detractions,id'],
+
+            'brand_id' => ['nullable', 'exists:brands,id'],
+            'modello_id' => ['nullable', 'exists:modellos,id'],
+
+            'tracking' => ['nullable', 'in:quantity,serial,lot'],
         ]);
+
+        if ($this->modello_id && $this->brand_id) {
+            $ok = Modello::where('id', $this->modello_id)
+                ->where('brand_id', $this->brand_id)
+                ->exists();
+
+            if (!$ok) {
+                $this->addError('modello_id', 'El modelo no pertenece a la marca seleccionada.');
+                return;
+            }
+        }
+
 
         $name = trim($this->name);
 
@@ -320,7 +450,7 @@ class ProductCreate extends Component
         }
 
         // 1) Crear template (sin precio)
-        $template = ProductTemplate::create([
+        /* $template = ProductTemplate::create([
             'name' => $name,
             'slug' => $slug,
             'type' => $this->type,
@@ -331,9 +461,36 @@ class ProductCreate extends Component
 
             'category_id' => $this->category_id ?: null,
 
-            'uom_id' => $this->uom_id ?: null, //unidad de medida de venta
-            'uom_po_id' => $this->uom_po_id ?: null, //unidad de medida de compra
+            'uom_id' => $this->uom_id ?: null,
+            'uom_po_id' => $this->uom_po_id ?: null,
+        ]); */
+
+        $template = ProductTemplate::create([
+            'name' => $name,
+            'slug' => $slug,
+            'type' => $this->type,
+
+            'sale_ok' => $this->sale_ok,
+            'purchase_ok' => $this->purchase_ok,
+            'pos_ok' => $this->pos_ok,
+            'active' => $this->active,
+
+            // nuevos
+            'category_id' => $this->category_id,
+            'uom_id' => $this->uom_id,
+            'uom_po_id' => $this->uom_po_id,
+
+            'tax_id' => $this->tax_id,
+            'detraction_id' => $this->detraction_id,
+
+            'brand_id' => $this->brand_id,
+            'modello_id' => $this->modello_id,
+
+
         ]);
+
+
+
 
         // 2) Procesar selección (atributos->valores)
         $selectedByAttr = $this->getSelectedValuesByAttribute();
@@ -390,12 +547,18 @@ class ProductCreate extends Component
             // SKU (simple + único)
             $sku = $this->buildSku($template->id, $nameParts);
 
+            $barcode = blank($this->barcode) ? null : trim($this->barcode);
+            $reference = blank($this->reference) ? null : trim($this->reference);
+
             $variant = ProductVariant::create([
                 'product_template_id' => $template->id,
                 'sku' => $sku,
-                'barcode' => null,
+                //'barcode' => $this->barcode ?: null,
+                // si hay variantes: barcode solo para default (o null para todas)
+                'barcode' => $first ? $barcode : null,
+                'reference' => $reference,
 
-                // ✅ precio SOLO en variantes:
+                // precio SOLO en variantes:
                 'price_sale' => (float) $this->base_price_sale + $extraTotal,
                 'price_wholesale' => null,
                 'price_purchase' => null,
@@ -405,6 +568,10 @@ class ProductCreate extends Component
 
                 'combination_key' => $combinationKey,
                 'variant_name' => $variantName,
+
+                'tracking' => $this->tracking,
+
+
             ]);
 
             // Pivot
@@ -440,10 +607,15 @@ class ProductCreate extends Component
     {
         $sku = $this->buildSku($template->id, ['DEFAULT']);
 
+        $barcode = blank($this->barcode) ? null : trim($this->barcode);
+        $reference = blank($this->reference) ? null : trim($this->reference);
+
         ProductVariant::create([
             'product_template_id' => $template->id,
             'sku' => $sku,
-            'barcode' => null,
+            'barcode' => $barcode,
+            'reference' => $reference,
+
 
             'price_sale' => (float) $this->base_price_sale,
             'price_wholesale' => null,

@@ -28,6 +28,7 @@ use App\Livewire\Admin\Products\ProductCreate as ProductsProductCreate;
 use App\Livewire\Admin\Pricelist\PricelistItemManager;
 use App\Livewire\Admin\Products\VariantsIndex;
 use Livewire\Volt\Volt;
+use App\Http\Controllers\Admin\Brand\BrandController;
 
 
 Route::get('/hola', function () {
@@ -107,3 +108,14 @@ Route::get('pricelist/{pricelist}/items', PricelistItemManager::class)->name('ad
 Route::get('products', [ProductController::class, 'index'])->name('admin.products.index');
 
 Route::get('admin/products/{product_template}/variants', VariantsIndex::class)->name('admin.products.variants');
+
+Route::resource('brands', BrandController::class)->names('admin.brands');
+
+Route::get('brands/export/excel', [BrandController::class, 'exportExcel'])
+    ->name('admin.brands.export.excel');
+
+Route::get('brands/export/pdf', [BrandController::class, 'exportPdf'])
+    ->name('admin.brands.export.pdf');
+
+Route::post('brands/import', [BrandController::class, 'import'])
+    ->name('admin.brands.import');

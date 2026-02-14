@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
-             $table->foreignId('product_template_id')
+            $table->foreignId('product_template_id')
                 ->constrained('product_templates')
                 ->cascadeOnDelete();
 
             // Identificadores
             $table->string('sku')->unique();               // CAM-M-NEG
             $table->string('barcode')->nullable()->unique();
+
+            // ✅ NUEVO: tracking (inventario)
+            $table->enum('tracking', ['none', 'quantity', 'lot', 'serial'])->default('quantity');
+
+            // ✅ NUEVO: referencia (interno / proveedor / etc.)
+            $table->string('reference')->nullable()->index();
 
             // Precios (puedes ajustar según tu negocio)
             $table->decimal('price_sale', 12, 2)->nullable();
@@ -39,6 +45,7 @@ return new class extends Migration
             // Nombre opcional para UI (cache): "M - Negro"
             $table->string('variant_name')->nullable();
 
+
             $table->timestamps();
 
             $table->index(['product_template_id']);
@@ -47,7 +54,6 @@ return new class extends Migration
 
             // Si usas combination_key, evita duplicados por template:
             $table->unique(['product_template_id', 'combination_key']);
-
         });
     }
 

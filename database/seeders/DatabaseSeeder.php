@@ -51,8 +51,9 @@ class DatabaseSeeder extends Seeder
         $this->call(AttributesTableSeeder::class);
         $this->call(AttributeValuesTableSeeder::class);
         $this->call([
-            UomSeeder::class,
+            UomSeeder::class, TaxSeeder::class, BrandSeeder::class, ModelloSeeder::class, DetractionSeeder::class,
         ]);
+
         $this->call(CategoriesTableSeeder::class);
     }
 }
