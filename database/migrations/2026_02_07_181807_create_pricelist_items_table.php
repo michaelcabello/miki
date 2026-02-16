@@ -19,7 +19,15 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             // all / template / variant
-            $table->enum('applied_on', ['all', 'template', 'variant'])->default('all');
+            //$table->enum('applied_on', ['all', 'template', 'variant'])->default('all');
+
+            $table->foreignId('category_id')
+                ->nullable()
+                ->constrained('categories') // ajusta el nombre real
+                ->nullOnDelete();
+
+            // mejor que enum para crecer como Odoo
+            $table->string('applied_on', 20)->default('all'); // all | category | template | variant
 
             $table->foreignId('product_template_id')
                 ->nullable()
@@ -64,13 +72,16 @@ return new class extends Migration
             $table->timestamps();
 
             // índices cortos (evita "identifier too long")
+            //$table->index(['product_category_id'], 'i_pli_pc');
+            $table->index(['category_id'], 'i_pli_cat');
+            $table->index(['pricelist_id', 'category_id'], 'i_pli_pl_pc');
+
             $table->index(['pricelist_id', 'active'], 'i_pli_pl_act');
             $table->index(['pricelist_id', 'applied_on'], 'i_pli_pl_app');
             $table->index(['product_template_id'], 'i_pli_pt');
             $table->index(['product_variant_id'], 'i_pli_pv');
             $table->index(['min_qty'], 'i_pli_minq');
             $table->index(['date_start', 'date_end'], 'i_pli_dt');
-
         });
     }
 

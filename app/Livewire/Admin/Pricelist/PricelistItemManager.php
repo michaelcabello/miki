@@ -3,18 +3,18 @@
 namespace App\Livewire\Admin\Pricelist;
 
 use Livewire\Component;
+use Livewire\WithPagination;
+use Illuminate\Validation\Rule;
+
 use App\Models\Pricelist;
 use App\Models\PricelistItem;
 use App\Models\ProductTemplate;
 use App\Models\ProductVariant;
-use Illuminate\Validation\Rule;
-use Livewire\WithPagination;
+use App\Models\Category;
 
-
-//php artisan make:livewire Admin/Pricelist/PricelistItemManager
+// php artisan make:livewire Admin/Pricelist/PricelistItemManager
 class PricelistItemManager extends Component
 {
-
     use WithPagination;
 
     public Pricelist $pricelist;
@@ -25,16 +25,19 @@ class PricelistItemManager extends Component
     // Para selects livianos
     public string $productSearch = '';
 
-    // Crear línea
     public array $new = [
-        'applied_on' => 'all',          // all | template | variant
+        'applied_on' => 'all',          // all | category | template | variant
+        'category_id' => null,
         'product_template_id' => null,
         'product_variant_id' => null,
+
         'sequence' => 10,
         'min_qty' => 1,
+
         'compute_method' => 'fixed',    // fixed | discount | formula
         'fixed_price' => null,
         'percent_discount' => null,
+
         'base' => 'price_sale',
         'base_pricelist_id' => null,
         'price_multiplier' => null,
@@ -42,15 +45,16 @@ class PricelistItemManager extends Component
         'rounding' => null,
         'min_margin' => null,
         'max_margin' => null,
+
         'date_start' => null,
         'date_end' => null,
+
         'active' => true,
     ];
 
-
-    // Edición inline
+    // Edición inline (por ahora solo arranque)
     public array $editing = [];
-    public array $row = []; // row[id][field] = value
+    public array $row = [];
 
     public function mount(Pricelist $pricelist)
     {
@@ -61,6 +65,7 @@ class PricelistItemManager extends Component
     {
         $this->resetPage();
     }
+
     public function updatingPerPage()
     {
         $this->resetPage();
@@ -69,13 +74,13 @@ class PricelistItemManager extends Component
     public function updatedNewAppliedOn()
     {
         // Resetea ids cuando cambias el ámbito
+        $this->new['category_id'] = null;
         $this->new['product_template_id'] = null;
         $this->new['product_variant_id'] = null;
     }
 
     public function updatedNewComputeMethod()
     {
-        // Limpia campos según método
         if ($this->new['compute_method'] !== 'fixed') $this->new['fixed_price'] = null;
         if ($this->new['compute_method'] !== 'discount') $this->new['percent_discount'] = null;
 
@@ -93,19 +98,29 @@ class PricelistItemManager extends Component
     private function rulesNew(): array
     {
         return [
-            'new.applied_on' => ['required', Rule::in(['all', 'template', 'variant'])],
+            'new.applied_on' => ['required', Rule::in(['all', 'category', 'template', 'variant'])],
+
+            'new.category_id' => [
+                'nullable',
+                Rule::requiredIf(fn() => $this->new['applied_on'] === 'category'),
+                'exists:categories,id'
+            ],
+
             'new.product_template_id' => [
                 'nullable',
                 Rule::requiredIf(fn() => $this->new['applied_on'] === 'template'),
                 'exists:product_templates,id'
             ],
+
             'new.product_variant_id' => [
                 'nullable',
                 Rule::requiredIf(fn() => $this->new['applied_on'] === 'variant'),
                 'exists:product_variants,id'
             ],
+
             'new.sequence' => ['required', 'integer', 'min:0'],
             'new.min_qty' => ['required', 'numeric', 'min:1'],
+
             'new.compute_method' => ['required', Rule::in(['fixed', 'discount', 'formula'])],
 
             'new.fixed_price' => [
@@ -114,6 +129,7 @@ class PricelistItemManager extends Component
                 'numeric',
                 'min:0'
             ],
+
             'new.percent_discount' => [
                 'nullable',
                 Rule::requiredIf(fn() => $this->new['compute_method'] === 'discount'),
@@ -124,11 +140,13 @@ class PricelistItemManager extends Component
 
             // Formula
             'new.base' => ['nullable', Rule::in(['price_sale', 'cost', 'other_pricelist'])],
+
             'new.base_pricelist_id' => [
                 'nullable',
                 Rule::requiredIf(fn() => $this->new['compute_method'] === 'formula' && $this->new['base'] === 'other_pricelist'),
                 'exists:pricelists,id'
             ],
+
             'new.price_multiplier' => ['nullable', 'numeric'],
             'new.price_surcharge' => ['nullable', 'numeric'],
             'new.rounding' => ['nullable', 'numeric'],
@@ -137,11 +155,12 @@ class PricelistItemManager extends Component
 
             'new.date_start' => ['nullable', 'date'],
             'new.date_end' => ['nullable', 'date', 'after_or_equal:new.date_start'],
+
             'new.active' => ['boolean'],
         ];
     }
 
-    public function addLine()
+    /*  public function addLine()
     {
         $this->validate($this->rulesNew());
 
@@ -150,7 +169,53 @@ class PricelistItemManager extends Component
             ...$this->new,
         ]);
 
+
+        $this->new['category_id'] = null;
+        $this->new['product_template_id'] = null;
+        $this->new['product_variant_id'] = null;
+        $this->new['fixed_price'] = null;
+        $this->new['percent_discount'] = null;
+
+        $this->dispatch('swal', icon: 'success', title: 'Bien Hecho', text: 'Regla agregada.');
+    } */
+
+    public function addLine()
+    {
+        $this->validate($this->rulesNew());
+
+        // 1) Copia data
+        $data = $this->new;
+
+        // 2) Limpieza según compute_method (igual que en save)
+        if (($data['compute_method'] ?? 'fixed') !== 'fixed') {
+            $data['fixed_price'] = null;
+        }
+        if (($data['compute_method'] ?? 'fixed') !== 'discount') {
+            $data['percent_discount'] = null;
+        }
+        if (($data['compute_method'] ?? 'fixed') !== 'formula') {
+            $data['base'] = 'price_sale';
+            $data['base_pricelist_id'] = null;
+            $data['price_multiplier'] = null;
+            $data['price_surcharge'] = null;
+            $data['rounding'] = null;
+            $data['min_margin'] = null;
+            $data['max_margin'] = null;
+        }
+
+        // 3) Limpieza según applied_on
+        if (($data['applied_on'] ?? 'all') !== 'category') $data['category_id'] = null;
+        if (($data['applied_on'] ?? 'all') !== 'template') $data['product_template_id'] = null;
+        if (($data['applied_on'] ?? 'all') !== 'variant') $data['product_variant_id'] = null;
+
+        // 4) Guardar
+        PricelistItem::create([
+            'pricelist_id' => $this->pricelist->id,
+            ...$data,
+        ]);
+
         // Reset suave
+        $this->new['category_id'] = null;
         $this->new['product_template_id'] = null;
         $this->new['product_variant_id'] = null;
         $this->new['fixed_price'] = null;
@@ -159,6 +224,8 @@ class PricelistItemManager extends Component
         $this->dispatch('swal', icon: 'success', title: 'Bien Hecho', text: 'Regla agregada.');
     }
 
+
+
     public function startEdit(int $id)
     {
         $item = PricelistItem::where('pricelist_id', $this->pricelist->id)->findOrFail($id);
@@ -166,6 +233,7 @@ class PricelistItemManager extends Component
         $this->editing[$id] = true;
         $this->row[$id] = $item->only([
             'applied_on',
+            'category_id',
             'product_template_id',
             'product_variant_id',
             'sequence',
@@ -197,9 +265,9 @@ class PricelistItemManager extends Component
 
         $data = $this->row[$id] ?? [];
 
-        // Validación básica para edición
         validator($data, [
-            'applied_on' => ['required', Rule::in(['all', 'template', 'variant'])],
+            'applied_on' => ['required', Rule::in(['all', 'category', 'template', 'variant'])],
+            'category_id' => ['nullable', 'exists:categories,id'],
             'product_template_id' => ['nullable', 'exists:product_templates,id'],
             'product_variant_id' => ['nullable', 'exists:product_variants,id'],
             'sequence' => ['required', 'integer', 'min:0'],
@@ -214,7 +282,7 @@ class PricelistItemManager extends Component
             'active' => ['boolean'],
         ])->validate();
 
-        // Limpieza lógica según compute_method
+        // Limpieza según compute_method
         if (($data['compute_method'] ?? 'fixed') !== 'fixed') $data['fixed_price'] = null;
         if (($data['compute_method'] ?? 'fixed') !== 'discount') $data['percent_discount'] = null;
         if (($data['compute_method'] ?? 'fixed') !== 'formula') {
@@ -226,7 +294,8 @@ class PricelistItemManager extends Component
             $data['max_margin'] = null;
         }
 
-        // Limpieza lógica según applied_on
+        // Limpieza según applied_on
+        if (($data['applied_on'] ?? 'all') !== 'category') $data['category_id'] = null;
         if (($data['applied_on'] ?? 'all') !== 'template') $data['product_template_id'] = null;
         if (($data['applied_on'] ?? 'all') !== 'variant') $data['product_variant_id'] = null;
 
@@ -244,10 +313,18 @@ class PricelistItemManager extends Component
     }
 
 
+
+
+
     public function render()
     {
-        // Items
         $items = PricelistItem::query()
+            ->with([
+                'category:id,name',
+                'productTemplate:id,name',
+                'productVariant:id,sku,variant_name',
+                'basePricelist:id,name',
+            ])
             ->where('pricelist_id', $this->pricelist->id)
             ->when($this->search, function ($q) {
                 $s = trim($this->search);
@@ -260,9 +337,20 @@ class PricelistItemManager extends Component
                 });
             })
             ->orderBy('sequence')
+            ->orderBy('min_qty')
             ->paginate($this->perPage);
 
-        // Catálogos livianos
+        /* $categories = Category::query()
+            ->select('id', 'name')
+            ->when($this->productSearch, fn($q) => $q->where('name', 'like', '%' . trim($this->productSearch) . '%'))
+            ->orderBy('name')
+            ->limit(30)
+            ->get(); */
+
+        $categoryTree = Category::tree()->get(); // usa tu scopeTree()
+
+        $categories = $this->flattenCategoriesForSelect($categoryTree);
+
         $templates = ProductTemplate::query()
             ->select('id', 'name')
             ->when($this->productSearch, fn($q) => $q->where('name', 'like', '%' . trim($this->productSearch) . '%'))
@@ -285,6 +373,7 @@ class PricelistItemManager extends Component
 
         return view('livewire.admin.pricelist.pricelist-item-manager', [
             'items' => $items,
+            'categories' => $categories,
             'templates' => $templates,
             'variants' => $variants,
             'allPricelists' => $pricelists,
@@ -292,5 +381,26 @@ class PricelistItemManager extends Component
     }
 
 
+    private function flattenCategoriesForSelect($nodes, string $trail = ''): array
+    {
+        $out = [];
 
+        foreach ($nodes as $cat) {
+            $currentTrail = $trail ? ($trail . ' / ' . $cat->name) : $cat->name;
+
+            $out[] = [
+                'id' => $cat->id,
+                'name' => $currentTrail,
+            ];
+
+            if ($cat->childrenRecursive && $cat->childrenRecursive->count()) {
+                $out = array_merge(
+                    $out,
+                    $this->flattenCategoriesForSelect($cat->childrenRecursive, $currentTrail)
+                );
+            }
+        }
+
+        return $out;
+    }
 }

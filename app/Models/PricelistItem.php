@@ -25,7 +25,8 @@ class PricelistItem extends Model
         'max_margin',
         'date_start',
         'date_end',
-        'active'
+        'active',
+        'category_id'
     ];
 
     protected $casts = [
@@ -58,4 +59,12 @@ class PricelistItem extends Model
     {
         return $this->belongsTo(Pricelist::class, 'base_pricelist_id');
     }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+
+
 }

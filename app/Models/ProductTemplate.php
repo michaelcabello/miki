@@ -64,4 +64,9 @@ class ProductTemplate extends Model
     {
         return $this->belongsTo(Detraction::class);
     }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

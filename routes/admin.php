@@ -29,7 +29,7 @@ use App\Livewire\Admin\Pricelist\PricelistItemManager;
 use App\Livewire\Admin\Products\VariantsIndex;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\Brand\BrandController;
-
+use App\Livewire\Admin\Pos\PosDemo;
 
 Route::get('/hola', function () {
     return '¡Hola desde el admin!';
@@ -119,3 +119,5 @@ Route::get('brands/export/pdf', [BrandController::class, 'exportPdf'])
 
 Route::post('brands/import', [BrandController::class, 'import'])
     ->name('admin.brands.import');
+
+Route::get('/pos-demo', PosDemo::class)->name('admin.pos.demo');
