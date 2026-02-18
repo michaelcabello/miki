@@ -62,4 +62,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Employee::class, 'user_id');
     }
+
+    public function partner()
+    {
+        return $this->belongsTo(Partner::class);
+    }
 }

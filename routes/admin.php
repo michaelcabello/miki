@@ -29,6 +29,7 @@ use App\Livewire\Admin\Pricelist\PricelistItemManager;
 use App\Livewire\Admin\Products\VariantsIndex;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\Brand\BrandController;
+use App\Http\Controllers\Admin\Partner\PartnerController;
 use App\Livewire\Admin\Pos\PosDemo;
 
 Route::get('/hola', function () {
@@ -121,3 +122,8 @@ Route::post('brands/import', [BrandController::class, 'import'])
     ->name('admin.brands.import');
 
 Route::get('/pos-demo', PosDemo::class)->name('admin.pos.demo');
+
+Route::resource('partners', PartnerController::class)->names('admin.partners');
+Route::get('partners-export-excel', [PartnerController::class, 'exportExcel'])->name('admin.partners.export.excel');
+Route::get('partners-export-pdf', [PartnerController::class, 'exportPdf'])->name('admin.partners.export.pdf');
+Route::post('partners-import', [PartnerController::class, 'import'])->name('admin.partners.import');

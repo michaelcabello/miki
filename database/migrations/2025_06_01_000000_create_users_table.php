@@ -17,7 +17,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-           // $table->boolean('state')->default(false)->nullable();
+            // $table->boolean('state')->default(false)->nullable();
+            $table->foreignId('partner_id')
+                ->nullable()
+                ->constrained('partners')
+                ->nullOnDelete();
+
+            $table->index(['partner_id'], 'i_users_partner');
             $table->rememberToken();
             $table->timestamps();
         });

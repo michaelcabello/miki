@@ -8,6 +8,11 @@ class Province extends Model
 {
     protected $guarded = ['id', 'created_at', 'updated_at'];
     //relacion deuno a muchos  una provincia tiene uno o muchos distritos
+
+    protected $primaryKey = 'id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     public function districts()
     {
         return $this->hasMany(District::class);

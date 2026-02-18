@@ -6,29 +6,49 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('partners', function (Blueprint $table) {
             $table->id();
             // Identificación
+            //$table->integer('depth')->nullable();
+            //$table->text('path')->nullable();
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->foreign('parent_id')->references('id')->on('partners')->onDelete('cascade');
+
             $table->string('name');
-            $table->string('company_type', 20)->default('company'); // company|person
-            $table->string('document_type', 10)->nullable();        // RUC|DNI|CE|PAS
+            $table->foreignId('company_type_id')
+                ->nullable()
+                ->constrained('company_types')
+                ->restrictOnDelete();
+
+            $table->foreignId('document_type_id')
+                ->nullable()
+                ->constrained('document_types')
+                ->nullOnDelete();
             $table->string('document_number', 20)->nullable();
+            $table->integer('order')->nullable();
 
             // Contacto
+            $table->string('image')->nullable();
             $table->string('email')->nullable();
             $table->string('phone', 30)->nullable();
+            $table->string('whatsapp', 30)->nullable();
             $table->string('mobile', 30)->nullable();
             $table->string('website')->nullable();
+            $table->string('facebook')->nullable();
+            $table->string('instagram')->nullable();
+            $table->string('youtube')->nullable();
+            $table->string('tiktok')->nullable();
+
+
 
             // Dirección (texto + FK ubigeo)
             $table->string('street')->nullable();
             $table->string('street2')->nullable();
             $table->string('zip', 10)->nullable();
+            $table->string('map')->nullable();
 
 
             // ✅ UBIGEO (tus tablas tienen PK string)
@@ -41,7 +61,7 @@ return new class extends Migration
             $table->boolean('is_supplier')->default(false);
             $table->integer('customer_rank')->default(0);
             $table->integer('supplier_rank')->default(0);
-            $table->boolean('active')->default(true);
+            $table->boolean('status')->default(true);
 
             // ✅ Lista de precios por partner (descuentos automáticos)
             $table->foreignId('pricelist_id')
@@ -58,12 +78,17 @@ return new class extends Migration
             // Datos bancarios (simple)
             $table->string('bank_account')->nullable();
 
+            $table->boolean('portal_access')->default(false);
+            $table->timestamp('portal_enabled_at')->nullable();
+
+
             $table->timestamps();
 
             // Índices / únicos
             $table->index(['name']);
-            $table->index(['active']);
-            $table->unique(['document_type', 'document_number'], 'u_partner_doc');
+            $table->index(['status']);
+            //$table->unique(['document_type', 'document_number'], 'u_partner_doc');
+            $table->unique(['document_type_id', 'document_number'], 'u_partner_doc');
             $table->index(['pricelist_id'], 'i_partner_pricelist');
             $table->index(['currency_id'], 'i_partner_currency');
 

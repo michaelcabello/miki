@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 //php artisan make:model District -m
 class District extends Model
 {
+    protected $primaryKey = 'id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     public function locals()
     {
         return $this->hasMany(Local::class);

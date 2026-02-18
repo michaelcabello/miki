@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
         $this->call(AttributeValuesTableSeeder::class);
         $this->call([
             UomSeeder::class, TaxSeeder::class, BrandSeeder::class, ModelloSeeder::class, DetractionSeeder::class,
+            CompanyTypeSeeder::class, PartnerSeeder::class,
         ]);
 
         $this->call(CategoriesTableSeeder::class);

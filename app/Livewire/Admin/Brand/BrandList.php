@@ -114,7 +114,7 @@ class BrandList extends Component
         return count(array_keys(array_filter($this->selectedBrands)));
     }
 
-/**
+    /**
      * Eliminar marcas seleccionadas
      */
     #[On('confirmDeleteSelected')]
