@@ -82,6 +82,19 @@ return new class extends Migration
             $table->timestamp('portal_enabled_at')->nullable();
 
 
+            // Contabilidad (por defecto del partner)
+            // Cuenta por cobrar
+            $table->foreignId('account_receivable_id')
+                ->nullable()
+                ->constrained('accounts')
+                ->nullOnDelete();
+            // Cuenta por pagar
+            $table->foreignId('account_payable_id')
+                ->nullable()
+                ->constrained('accounts')
+                ->nullOnDelete();
+
+
             $table->timestamps();
 
             // Índices / únicos
@@ -96,6 +109,10 @@ return new class extends Migration
             $table->foreign('department_id')->references('id')->on('departments')->nullOnDelete();
             $table->foreign('province_id')->references('id')->on('provinces')->nullOnDelete();
             $table->foreign('district_id')->references('id')->on('districts')->nullOnDelete();
+
+            //cuentas por cobrar y pagar
+            $table->index(['account_receivable_id'], 'i_partner_acc_receivable');
+            $table->index(['account_payable_id'], 'i_partner_acc_payable');
         });
     }
 

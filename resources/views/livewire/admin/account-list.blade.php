@@ -17,7 +17,7 @@
 
         <div class="flex flex-wrap gap-2">
             <!-- Nueva cuenta -->
-            <a href="{{ route('category.create') }}"
+            <a href="{{ route('admin.accounts.create') }}"
                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">
                 <i class="fa-solid fa-plus mr-2"></i> Nueva Cuenta Contable
             </a>

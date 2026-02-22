@@ -48,6 +48,7 @@
                         ['title' => 'Productos', 'img' => 'contable.jpg', 'route' => route('admin.products.index')],
                         ['title' => 'Lista de precios', 'img' => 'contable.jpg', 'route' => route('admin.pricelists.index')],
                         ['title' => 'Impuestos', 'img' => 'contable.jpg', 'route' => route('admin.pricelists.index')],
+                        ['title' => 'Partners', 'img' => 'contable.jpg', 'route' => route('admin.partners.index')],
 
 
                     ];

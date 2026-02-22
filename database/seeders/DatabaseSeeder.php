@@ -30,7 +30,10 @@ class DatabaseSeeder extends Seeder
         //crea 10 usuarios usando faker
         User::factory(18)->create();
 
+         $this->call(DocumentTypesTableSeeder::class);
+
         $this->call([
+
             CurrencySeeder::class,
             DepartmentSeeder::class,
             ProvinceSeeder::class,
@@ -42,7 +45,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SubAccountTypeSeeder::class,
             AccountTypeSeeder::class,
-            AccountSeeder::class,
+            //AccountSeeder::class,
+            AccountSeederdos::class,
             // TenantsTableSeeder::class,
         ]);
 
@@ -56,5 +60,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(CategoriesTableSeeder::class);
+
     }
 }

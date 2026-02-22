@@ -18,7 +18,7 @@ use App\Models\District;
 class PartnerSeeder extends Seeder
 {
 
-public function run(): void
+    public function run(): void
     {
         // ✅ Company types
         $companyId = CompanyType::where('code', 'company')->value('id')
@@ -63,7 +63,8 @@ public function run(): void
                 'fe/default/partners/avatar3.png',
             ];
             $arr = $isCompany ? $companies : $people;
-            return $arr[array_rand($arr)];
+            //return $arr[array_rand($arr)];
+            return null;
         };
 
         $fakeMap = function (string $name) {
@@ -143,8 +144,12 @@ public function run(): void
 
                 'bank_account' => 'BCP-' . random_int(100000, 999999) . '-' . random_int(1000, 9999),
 
-                'portal_access' => (bool) random_int(0, 1),
+                //'portal_access' => (bool) random_int(0, 1),
+                'portal_access' => 0,
                 'portal_enabled_at' => now(),
+
+                'account_receivable_id' => 23,
+                'account_payable_id' => 51,
             ]);
 
             // 3 contactos hijos
@@ -194,6 +199,9 @@ public function run(): void
 
                     'portal_access' => false,
                     'portal_enabled_at' => null,
+
+                    'account_receivable_id' => 23,
+                    'account_payable_id' => 51,
                 ]);
             }
         }
@@ -250,6 +258,10 @@ public function run(): void
 
                 'portal_access' => false,
                 'portal_enabled_at' => null,
+
+                'account_receivable_id' => 23,
+                'account_payable_id' => 51,
+
             ]);
 
             for ($c = 1; $c <= 3; $c++) {
@@ -296,13 +308,11 @@ public function run(): void
 
                     'portal_access' => false,
                     'portal_enabled_at' => null,
+
+                    'account_receivable_id' => 23,
+                    'account_payable_id' => 51,
                 ]);
             }
         }
     }
-
-
-
-
-
 }

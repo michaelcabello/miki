@@ -23,7 +23,14 @@ return new class extends Migration
             $table->string('name', 255)->nullable();; // nombre de la cuenta
             $table->string('tag', 255)->nullable();; // etiquetas
             // Relación con tipo de cuenta
-            $table->foreignId('account_type_id')->constrained('account_types')->nullable(); // otra tabla
+            //$table->foreignId('account_type_id')->constrained('account_types')->nullable(); // otra tabla
+
+            $table->foreignId('account_type_id')
+                ->nullable()
+                ->constrained('account_types')
+                ->nullOnDelete();
+
+
 
             $table->boolean('reconcile')->default(false)->nullable(); // permite conciliar?
             $table->boolean('costcenter')->default(false)->nullable(); // requiere centro de costos?

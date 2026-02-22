@@ -84,6 +84,9 @@ class Partner extends Model
         */
         'portal_access',
         'portal_enabled_at',
+
+        'account_receivable_id',
+        'account_payable_id',
     ];
 
 
@@ -146,5 +149,26 @@ class Partner extends Model
     {
         // partner.district_id (string) -> districts.id (string)
         return $this->belongsTo(District::class, 'district_id', 'id');
+    }
+
+    //para que es esto ?
+    public function getImageUrlAttribute(): string
+    {
+        if (!$this->image) return '';
+        // Si ya guardas URL completa, retorna tal cual:
+        if (str_starts_with($this->image, 'http')) return $this->image;
+        // Si es storage local:
+        return asset($this->image);
+    }
+
+    //relacion con cuentas por cobrar
+    public function accountReceivable()
+    {
+        return $this->belongsTo(Account::class, 'account_receivable_id');
+    }
+    //relacion con cuentas por pagar
+    public function accountPayable()
+    {
+        return $this->belongsTo(Account::class, 'account_payable_id');
     }
 }

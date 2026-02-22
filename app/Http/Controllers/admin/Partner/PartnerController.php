@@ -10,10 +10,15 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 
 use App\Exports\PartnersExport;
+use App\Http\Requests\StorePartnerRequest;
 use App\Imports\PartnersImport;
+use App\Models\CompanyType;
+use App\Models\Currency;
+use App\Models\Department;
+use App\Models\Pricelist;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use App\Models\DocumentType;
 use Illuminate\Support\Facades\DB;
 
 
@@ -202,15 +207,41 @@ class PartnerController extends Controller
      */
     public function create()
     {
-        //
+
+        return view('admin.partners.create', [
+            'companyTypes'  => CompanyType::orderBy('name')->get(['id', 'name']),
+            'documentTypes' => DocumentType::where('active', true)->orderBy('sequence')->get(['id', 'name']),
+            'pricelists'    => Pricelist::orderBy('name')->get(['id', 'name']),
+            'currencies'    => Currency::orderBy('name')->get(['id', 'name']),
+            'departments'   => Department::orderBy('name')->get(['id', 'name']),
+            // provincias/distritos se cargan vía JS o en edit según departamento (opcional)
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StorePartnerRequest $request)
     {
-        //
+        return DB::transaction(function () use ($request) {
+            $data = $request->validated();
+
+            // ✅ En CREATE solo creamos RAÍZ
+            $data['parent_id'] = null;
+
+            // portal_enabled_at automático si activas portal
+            if (!empty($data['portal_access']) && empty($data['portal_enabled_at'])) {
+                $data['portal_enabled_at'] = now();
+            }
+
+            $partner = Partner::create($data);
+
+            // ✅ Redirige a EDIT para agregar contactos (Odoo-like)
+            return redirect()
+                ->route('admin.partners.edit', $partner)
+                ->with('swal', [
+                    'icon' => 'success',
+                    'title' => 'Creado',
+                    'text' => 'Partner creado. Ahora puedes agregar contactos.',
+                ]);
+        });
     }
 
     /**

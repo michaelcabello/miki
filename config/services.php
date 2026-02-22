@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+
+    'consulta_ruc' => [
+        'base_url' => env('CONSULTA_RUC_BASE_URL', 'https://api.apis.net.pe'),
+        'token' => env('CONSULTA_RUC_TOKEN'),
+    ],
+
 ];

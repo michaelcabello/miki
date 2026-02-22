@@ -30,8 +30,8 @@ class PartnerList extends Component
 
     // Columnas opcionales para mostrar/ocultar
     public $columns = [
-        'slug' => false,
-        'seo'  => false,
+        'whatsapp'  => false,
+        'street'  => false,
     ];
 
     public function updatingSearch() { $this->resetPage(); }

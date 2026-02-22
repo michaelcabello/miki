@@ -60,13 +60,17 @@
                 <div x-show="open" @click.away="open = false" x-transition
                     class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 z-50">
                     <p class="text-gray-700 dark:text-gray-300 font-semibold mb-2">Columnas</p>
+                    {{-- <label class="flex items-center mb-1">
+                        <input type="checkbox" wire:model.live="columns.street" class="mr-2 rounded border-gray-300">
+                        teléfono
+                    </label> --}}
                     <label class="flex items-center mb-1">
-                        <input type="checkbox" wire:model.live="columns.slug" class="mr-2 rounded border-gray-300">
-                        Slug
+                        <input type="checkbox" wire:model.live="columns.whatsapp" class="mr-2 rounded border-gray-300">
+                        whatsapp
                     </label>
                     <label class="flex items-center mb-1">
-                        <input type="checkbox" wire:model.live="columns.seo" class="mr-2 rounded border-gray-300">
-                        SEO
+                        <input type="checkbox" wire:model.live="columns.street" class="mr-2 rounded border-gray-300">
+                        Dirección
                     </label>
                 </div>
             </div>
@@ -157,15 +161,17 @@
                         @endif
                     </th>
 
-                    @if ($columns['slug'])
+
+
+                    @if ($columns['whatsapp'])
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">
-                            Slug
+                            Whatsapp
                         </th>
                     @endif
 
-                    @if ($columns['seo'])
+                     @if ($columns['street'])
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">
-                            SEO
+                            Dirección
                         </th>
                     @endif
 
@@ -229,22 +235,22 @@
                             </div>
                         </td>
 
-                        @if ($columns['slug'])
+
+
+                        @if ($columns['whatsapp'])
                             <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $partner->slug ?? '—' }}
+                                <div class="space-y-1">
+                                    @if (!empty($partner->whatsapp ))
+                                        <p class="font-semibold">{{ $partner->whatsapp }}</p>
+                                    @endif
+
+                                </div>
                             </td>
                         @endif
 
-                        @if ($columns['seo'])
+                        @if ($columns['street'])
                             <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                <div class="space-y-1">
-                                    @if (!empty($partner->title))
-                                        <p class="font-semibold">{{ \Illuminate\Support\Str::limit($partner->title, 30) }}</p>
-                                    @endif
-                                    @if (!empty($partner->description))
-                                        <p class="text-xs">{{ \Illuminate\Support\Str::limit($partner->description, 50) }}</p>
-                                    @endif
-                                </div>
+                                {{ $partner->street ?? '—' }}
                             </td>
                         @endif
 
