@@ -96,7 +96,7 @@
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tipo</label>
-                            <select wire:model.defer="type"
+                            <select wire:model.live="type"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
                        bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="goods">Bienes</option>
@@ -143,7 +143,7 @@
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
                                 U. Medida (Venta / Stock)
                             </label>
-                            <select wire:model.defer="uom_id"
+                            <select wire:model.live="uom_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
                        bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 <option value="">-- Seleccionar --</option>
@@ -167,16 +167,23 @@
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
                                 U. Compra (opcional)
                             </label>
-                            <select wire:model.defer="uom_po_id"
+
+                            <select wire:model.defer="uom_po_id" wire:key="uom-po-{{ $uom_id }}"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+
                                 <option value="">-- Seleccionar --</option>
-                                @foreach ($uomPurchaseOptions as $uom)
-                                    <option value="{{ $uom['id'] }}">
-                                        {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
-                                    </option>
+                                @foreach ($uomCategories as $cat)
+                                    <optgroup label="{{ $cat['name'] }}">
+                                        @foreach ($cat['uoms'] as $uom)
+                                            <option value="{{ $uom['id'] }}">
+                                                {{ $uom['name'] }}{{ $uom['symbol'] ? ' (' . $uom['symbol'] . ')' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
                             </select>
+
                             @error('uom_po_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
@@ -220,24 +227,77 @@
                     </div>
 
                     {{-- 4) FILA 2 (4 campos): Impuesto, Detracción, Código de barras, Referencia --}}
-                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-5 gap-4">
 
                         {{-- Impuesto --}}
-                        <div>
-                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Impuesto</label>
-                            {{-- <select wire:model.defer="tax_id"
-                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                <option value="">-- Sin impuesto --</option>
-                                 @foreach ($taxes as $tax)
-                                    <option value="{{ $tax->id }}">{{ $tax->name }}</option>
-                                @endforeach
-                            </select> --}}
+                        {{--  <div>
 
-                            <select wire:model.defer="tax_id"
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Impuestos de
+                                    venta</label>
+
+                                <select wire:model.defer="sale_tax_ids" multiple
+                                    class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                         bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                    @foreach ($taxOptions as $t)
+                                        <option value="{{ $t['id'] }}">
+                                            {{ $t['name'] }}
+                                            ({{ rtrim(rtrim(number_format($t['amount'], 2), '0'), '.') }}{{ $t['amount_type'] === 'percent' ? '%' : '' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                @error('sale_tax_ids')
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                                @error('sale_tax_ids.*')
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+
+                                <p class="text-xs text-gray-500 mt-1">Tip: mantén presionado Ctrl (Windows) o ⌘ (Mac)
+                                    para seleccionar varios.</p>
+                            </div>
+                        </div> --}}
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Impuestos de venta
+                            </label>
+
+                            <div
+                                class="mt-2 space-y-2 rounded-xl border border-gray-300 dark:border-gray-600 p-3 bg-white dark:bg-gray-700">
+                                @foreach ($taxOptions as $t)
+                                    <label class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-200">
+                                        <input type="checkbox" value="{{ $t['id'] }}"
+                                            wire:model.defer="sale_tax_ids"
+                                            class="rounded border-gray-300 dark:border-gray-600" />
+                                        <span>
+                                            {{ $t['name'] }}
+                                            <span class="text-gray-500">
+                                                ({{ rtrim(rtrim(number_format($t['amount'], 2), '0'), '.') }}{{ $t['amount_type'] === 'percent' ? '%' : '' }})
+                                            </span>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            @error('sale_tax_ids')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            @error('sale_tax_ids.*')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+
+
+                        {{-- <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Impuestos de
+                                compra</label>
+
+                            <select wire:model.defer="purchase_tax_ids" multiple
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                <option value="">-- Sin impuesto --</option>
+                                     bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                 @foreach ($taxOptions as $t)
                                     <option value="{{ $t['id'] }}">
                                         {{ $t['name'] }}
@@ -246,7 +306,42 @@
                                 @endforeach
                             </select>
 
-                            @error('tax_id')
+                            @error('purchase_tax_ids')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            @error('purchase_tax_ids.*')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        --}}
+
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Impuestos de compra
+                            </label>
+
+                            <div
+                                class="mt-2 space-y-2 rounded-xl border border-gray-300 dark:border-gray-600 p-3 bg-white dark:bg-gray-700">
+                                @foreach ($taxOptions as $t)
+                                    <label class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-200">
+                                        <input type="checkbox" value="{{ $t['id'] }}"
+                                            wire:model.defer="purchase_tax_ids"
+                                            class="rounded border-gray-300 dark:border-gray-600" />
+                                        <span>
+                                            {{ $t['name'] }}
+                                            <span class="text-gray-500">
+                                                ({{ rtrim(rtrim(number_format($t['amount'], 2), '0'), '.') }}{{ $t['amount_type'] === 'percent' ? '%' : '' }})
+                                            </span>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            @error('purchase_tax_ids')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            @error('purchase_tax_ids.*')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -254,14 +349,7 @@
                         {{-- Detracción --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Detracción</label>
-                            {{-- <select wire:model.defer="detraction_id"
-                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                <option value="">-- No aplica --</option>
-                                  @foreach ($detractions as $d)
-                                    <option value="{{ $d->id }}">{{ $d->name }}</option>
-                                @endforeach
-                            </select> --}}
+
                             {{-- Detracción --}}
                             <select wire:model.defer="detraction_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
@@ -664,6 +752,63 @@
                     </div>
                 </div>
             @endif
+
+            @php
+                $controlBase = "w-full h-12 px-4 rounded-xl border border-gray-300 dark:border-gray-600
+                            bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200
+                            focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition";
+            @endphp
+
+            @if ($tab === 'accounting')
+                <div class="space-y-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Contabilidad</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-300">
+                            Define la cuenta por defecto para el producto.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Cuenta contable
+                                Ventas </label>
+                            <select wire:key="sell-{{ $type }}" wire:model.live="account_sell_id" class="{{ $controlBase }} mt-2">
+                                <option value="">— Seleccionar —</option>
+                                @foreach ($accountOptions as $a)
+                                    <option value="{{ $a['id'] }}">{{ $a['label'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('account_sell_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Cuenta contable
+                                Compras </label>
+                            <select wire:key="buy-{{ $type }}" wire:model.live="account_buy_id" class="{{ $controlBase }} mt-2">
+                                <option value="">— Seleccionar —</option>
+                                @foreach ($accountOptions as $a)
+                                    <option value="{{ $a['id'] }}">{{ $a['label'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('account_buy_id')
+                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button wire:click="save"
+                            class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
+                                   bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700
+                                   text-white font-semibold shadow-sm transition">
+                            <i class="fa-regular fa-floppy-disk"></i> Guardar partner
+                        </button>
+                    </div>
+                </div>
+            @endif
+
 
         </div>
     </div>

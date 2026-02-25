@@ -42,16 +42,16 @@ return new class extends Migration
                 ->nullOnDelete();
 
 
-            $table->unsignedBigInteger('sale_tax_id')->nullable();
-            $table->unsignedBigInteger('purchase_tax_id')->nullable();
+            //$table->unsignedBigInteger('sale_tax_id')->nullable();
+            // $table->unsignedBigInteger('purchase_tax_id')->nullable();
 
-            $table->foreign('sale_tax_id', 'fk_pt_sale_tax')
+            /* $table->foreign('sale_tax_id', 'fk_pt_sale_tax')
                 ->references('id')->on('taxes')
                 ->nullOnDelete();
 
             $table->foreign('purchase_tax_id', 'fk_pt_purchase_tax')
                 ->references('id')->on('taxes')
-                ->nullOnDelete();
+                ->nullOnDelete(); */
 
             /*
     |--------------------------------------------------------------------------
@@ -77,6 +77,17 @@ return new class extends Migration
                 ->references('id')->on('detractions')
                 ->nullOnDelete();
 
+
+            $table->foreignId('account_buy_id')
+                ->nullable()
+                ->constrained('accounts')
+                ->nullOnDelete();
+
+            $table->foreignId('account_sell_id')
+                ->nullable()
+                ->constrained('accounts')
+                ->nullOnDelete();
+
             /*
             |--------------------------------------------------------------------------
             | Índices
@@ -86,8 +97,8 @@ return new class extends Migration
             $table->index(['uom_id'], 'i_pt_uom');
             $table->index(['uom_po_id'], 'i_pt_uompo');
             $table->index(['category_id'], 'i_pt_category');
-            $table->index(['sale_tax_id'], 'i_pt_stax');
-            $table->index(['purchase_tax_id'], 'i_pt_ptax');
+            //$table->index(['sale_tax_id'], 'i_pt_stax');
+            //$table->index(['purchase_tax_id'], 'i_pt_ptax');
             $table->index(['brand_id'], 'i_pt_brand');
             $table->index(['modello_id'], 'i_pt_modello');
             $table->index(['detraction_id'], 'i_pt_detraction');

@@ -11,12 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('journal_types', function (Blueprint $table) {
+        Schema::create('point_of_sales', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 30)->unique();
+             $table->string('code', 20)->unique();      // PV1, PV2...
             $table->string('name', 120);
+
+            $table->string('annex_code', 10)->nullable(); // código anexo/local
+            $table->string('address', 255)->nullable();
+
+            $table->string('phone', 30)->nullable();
+            $table->string('email', 120)->nullable();
+
             $table->boolean('state')->default(true);
-            $table->unsignedSmallInteger('order')->default(0);
             $table->timestamps();
         });
     }
@@ -26,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('journal_types');
+        Schema::dropIfExists('point_of_sales');
     }
 };

@@ -69,4 +69,21 @@ class ProductTemplate extends Model
     {
         return $this->belongsTo(Category::class);
     }
+    // Relaciones con impuestos de venta y compra
+    //para que los productos puedan tener varios impuestos
+    public function saleTaxes()
+    {
+        return $this->belongsToMany(Tax::class, 'product_template_sale_taxes')
+            ->withPivot('sequence')
+            ->withTimestamps()
+            ->orderBy('pivot_sequence');
+    }
+    // Relaciones con impuestos de venta y compra
+    public function purchaseTaxes()
+    {
+        return $this->belongsToMany(Tax::class, 'product_template_purchase_taxes')
+            ->withPivot('sequence')
+            ->withTimestamps()
+            ->orderBy('pivot_sequence');
+    }
 }

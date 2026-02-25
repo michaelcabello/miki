@@ -50,52 +50,6 @@ class PartnerController extends Controller
     }
 
 
-    /**
-     * Exportar PDF
-     */
-    /*     public function exportPdf()
-    {
-        $partners = Partner::all();
-
-        $pdf = Pdf::loadView('admin.partners.pdf', compact('partners'))
-            ->setPaper('a4', 'portrait');
-
-        return $pdf->download('partners.pdf');
-    } */
-
-    //exporta contactos y clientes y proveedores
-    /*  public function exportPdf()
-    {
-        try {
-            $partners = Partner::query()
-                ->with([
-                    'companyType:id,name',
-                    'documentType:id,name',
-                    'pricelist:id,name',
-                    'currency:id,name',
-                    'department:id,name',
-                    'province:id,name',
-                    'district:id,name',
-                    'parent:id,name',
-                ])
-                ->orderBy('order', 'asc')
-                ->orderBy('name', 'asc')
-                ->get();
-
-            $pdf = Pdf::loadView('admin.partners.pdf', compact('partners'))
-                ->setPaper('a4', 'portrait');
-
-            return $pdf->download('reporte_partners_' . date('Y-m-d_His') . '.pdf');
-        } catch (\Throwable $e) {
-            session()->flash('swal', [
-                'icon'  => 'error',
-                'title' => 'Error',
-                'text'  => 'Error al generar PDF: ' . $e->getMessage(),
-            ]);
-
-            return back();
-        }
-    } */
 
     //exporta clientes
     public function exportPdf()
@@ -151,8 +105,6 @@ class PartnerController extends Controller
             return back();
         }
     }
-
-
 
 
     /**

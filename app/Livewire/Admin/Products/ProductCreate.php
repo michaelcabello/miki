@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Products;
 
+use App\Models\Account;
 use Livewire\Component;
 
 use App\Models\UomCategory;
@@ -17,6 +18,8 @@ use App\Models\Detraction;
 use App\Models\Brand;
 use App\Models\Modello;
 
+use Illuminate\Support\Facades\DB;
+
 //php artisan make:livewire Admin/Products/ProductCreate
 class ProductCreate extends Component
 {
@@ -29,7 +32,10 @@ class ProductCreate extends Component
     public bool $pos_ok = true;
     public bool $active = true;
 
-    public ?int $tax_id = null;
+    //public ?int $tax_id = null;
+    public array $sale_tax_ids = [];      // impuestos de venta (multi)
+    public array $purchase_tax_ids = [];  // impuestos de compra (multi)
+
     public ?int $detraction_id = null;
     public ?int $brand_id = null;
     public ?int $modello_id = null;
@@ -45,6 +51,9 @@ class ProductCreate extends Component
 
     public ?int $uom_id = null;
     public ?int $uom_po_id = null;
+
+    //public $uom_id = null;
+    //public $uom_po_id = null;
 
     public $category_id = null;
     public array $categoryOptions = [];
@@ -72,6 +81,24 @@ class ProductCreate extends Component
     public string $tab = 'general';
     public $barcode = null;
     public $reference = null;
+
+    public array $accountOptions = [];
+
+    public ?int $account_sell_id = null;
+    public ?int $account_buy_id = null;
+
+    private $accountSettings;
+
+
+    public ?int $defaultSellGoodsId = null;
+    public ?int $defaultSellServiceId = null;
+
+    public ?int $defaultBuyGoodsId = null;
+    public ?int $defaultBuyServiceId = null;
+
+    // Para no pisar si el usuario ya cambió manualmente
+    public bool $sellTouched = false;
+    public bool $buyTouched = false;
 
 
     public function mount(): void
@@ -149,7 +176,76 @@ class ProductCreate extends Component
             ->get();
 
         $this->categoryOptions = $this->flattenCategories($tree);
+
+
+        $this->accountOptions = Account::query()
+            ->where('isrecord', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name'])
+            ->map(fn($a) => [
+                'id' => $a->id,
+                'label' => trim(($a->code ? $a->code . ' - ' : '') . $a->name),
+            ])
+            ->all();
+
+
+
+
+        $settings = DB::table('account_settings')->where('active', true)->first();
+
+        $this->defaultSellGoodsId   = $settings->default_income_goods_account_id   ?? $settings->default_income_account_id ?? null;
+        $this->defaultSellServiceId = $settings->default_income_service_account_id ?? $settings->default_income_account_id ?? null;
+
+        $this->defaultBuyGoodsId    = $settings->default_expense_goods_account_id  ?? $settings->default_expense_account_id ?? null;
+        $this->defaultBuyServiceId  = $settings->default_expense_service_account_id ?? $settings->default_expense_account_id ?? null;
+
+        // Set inicial según el type actual
+        $this->applyAccountDefaultsByType();
     }
+
+
+    public function updatedType($value): void
+    {
+        // cada vez que cambie goods/service/combo
+        $this->applyAccountDefaultsByType();
+    }
+
+    public function updatedAccountSellId(): void
+    {
+        $this->sellTouched = true;
+    }
+
+    public function updatedAccountBuyId(): void
+    {
+        $this->buyTouched = true;
+    }
+
+    private function applyAccountDefaultsByType(): void
+    {
+        $isService = ($this->type === 'service');
+
+        $sellDefault = $isService
+            ? $this->defaultSellServiceId
+            : $this->defaultSellGoodsId; // goods y combo usan goods
+
+        $buyDefault = $isService
+            ? $this->defaultBuyServiceId
+            : $this->defaultBuyGoodsId;
+
+        // Solo setear si el usuario NO lo tocó (para no fastidiar)
+        if (!$this->sellTouched) {
+            $this->account_sell_id = $sellDefault;
+        }
+        if (!$this->buyTouched) {
+            $this->account_buy_id = $buyDefault;
+        }
+
+        // (Opcional) si quieres que al cambiar type siempre se resetee aunque el usuario tocó:
+        // $this->account_sell_id = $sellDefault;
+        // $this->account_buy_id = $buyDefault;
+    }
+
+
 
 
     public function updatedBrandId($value): void
@@ -369,6 +465,9 @@ class ProductCreate extends Component
 
     public function render()
     {
+
+
+
         $attributes = Attribute::where('state', true)
             ->with(['values' => function ($q) {
                 $q->where('active', true)->orderByRaw('COALESCE(sort_order, 999999) asc')->orderBy('name');
@@ -417,14 +516,22 @@ class ProductCreate extends Component
             'pos_ok' => ['boolean'],
             'active' => ['boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
+            //'tax_id' => ['nullable', 'exists:taxes,id'],
+            'sale_tax_ids' => ['array'],
+            'sale_tax_ids.*' => ['integer', 'exists:taxes,id'],
 
-            'tax_id' => ['nullable', 'exists:taxes,id'],
+            'purchase_tax_ids' => ['array'],
+            'purchase_tax_ids.*' => ['integer', 'exists:taxes,id'],
+
             'detraction_id' => ['nullable', 'exists:detractions,id'],
 
             'brand_id' => ['nullable', 'exists:brands,id'],
             'modello_id' => ['nullable', 'exists:modellos,id'],
 
             'tracking' => ['nullable', 'in:quantity,serial,lot'],
+
+            'account_sell_id' => ['required', 'exists:accounts,id'],
+            'account_buy_id'  => ['required', 'exists:accounts,id'],
         ]);
 
         if ($this->modello_id && $this->brand_id) {
@@ -480,14 +587,25 @@ class ProductCreate extends Component
             'uom_id' => $this->uom_id,
             'uom_po_id' => $this->uom_po_id,
 
-            'tax_id' => $this->tax_id,
+            //'tax_id' => $this->tax_id,
             'detraction_id' => $this->detraction_id,
 
             'brand_id' => $this->brand_id,
             'modello_id' => $this->modello_id,
 
+            'account_sell_id' => $this->account_sell_id, // ✅ cuenta contable VENTAS (70xx)
+            'account_buy_id'  => $this->account_buy_id,  // ✅ cuenta contable COMPRAS (60xx)
 
         ]);
+
+        // Impuestos (muchos a muchos)
+        $template->saleTaxes()->sync(
+            collect($this->sale_tax_ids)->filter()->map(fn($x) => (int)$x)->values()->all()
+        );
+
+        $template->purchaseTaxes()->sync(
+            collect($this->purchase_tax_ids)->filter()->map(fn($x) => (int)$x)->values()->all()
+        );
 
 
 

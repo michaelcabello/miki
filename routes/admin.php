@@ -30,6 +30,7 @@ use App\Livewire\Admin\Products\VariantsIndex;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\Brand\BrandController;
 use App\Http\Controllers\Admin\Partner\PartnerController;
+use App\Livewire\Admin\Accountsetting\AccountSettingEdit;
 use App\Livewire\Admin\Partner\PartnerCreate;
 use App\Livewire\Admin\Partner\PartnerEdit;
 use App\Livewire\Admin\Pos\PosDemo;
@@ -133,3 +134,5 @@ Route::get('partners/{partner}/edit', PartnerEdit::class)->name('admin.partners.
 Route::get('partners-export-excel', [PartnerController::class, 'exportExcel'])->name('admin.partners.export.excel');
 Route::get('partners-export-pdf', [PartnerController::class, 'exportPdf'])->name('admin.partners.export.pdf');
 Route::post('partners-import', [PartnerController::class, 'import'])->name('admin.partners.import');
+
+Route::get('account-settings', AccountSettingEdit::class)->name('admin.accountsettings.edit'); // singleton edi
