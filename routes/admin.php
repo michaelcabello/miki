@@ -29,8 +29,12 @@ use App\Livewire\Admin\Pricelist\PricelistItemManager;
 use App\Livewire\Admin\Products\VariantsIndex;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\Brand\BrandController;
+use App\Http\Controllers\Admin\Journaltype\JournalTypeController;
 use App\Http\Controllers\Admin\Partner\PartnerController;
 use App\Livewire\Admin\Accountsetting\AccountSettingEdit;
+use App\Livewire\Admin\Journaltype\JournalTypeCreate;
+use App\Livewire\Admin\Journaltype\JournalTypeEdit;
+use App\Livewire\Admin\Journaltype\JournalTypeList;
 use App\Livewire\Admin\Partner\PartnerCreate;
 use App\Livewire\Admin\Partner\PartnerEdit;
 use App\Livewire\Admin\Pos\PosDemo;
@@ -135,4 +139,12 @@ Route::get('partners-export-excel', [PartnerController::class, 'exportExcel'])->
 Route::get('partners-export-pdf', [PartnerController::class, 'exportPdf'])->name('admin.partners.export.pdf');
 Route::post('partners-import', [PartnerController::class, 'import'])->name('admin.partners.import');
 
-Route::get('account-settings', AccountSettingEdit::class)->name('admin.accountsettings.edit'); // singleton edi
+Route::get('account-settings', AccountSettingEdit::class)->name('admin.accountsettings.edit'); // singleton edi, osea simple o un solo archivo
+
+//tipos de diarios
+Route::get('journal-types', JournalTypeList::class)->middleware('permission:JournalType List')->name('admin.journaltypes.index');
+Route::get('journal-types/create', JournalTypeCreate::class)->middleware('permission:JournalType Create')->name('admin.journaltypes.create');
+Route::get('journal-types/{jt}/edit', JournalTypeEdit::class)->middleware('permission:JournalType Update')->name('admin.journaltypes.edit');
+Route::get('journal-types-export-excel', [JournalTypeController::class, 'exportExcel'])->name('admin.journaltypes.export.excel');
+Route::get('journal-types-export-pdf', [JournalTypeController::class, 'exportPdf'])->name('admin.journaltypes.export.pdf');
+Route::post('journal-types-import', [JournalTypeController::class, 'import'])->name('admin.journaltypes.import');

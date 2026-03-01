@@ -50,6 +50,7 @@
                         ['title' => 'Impuestos', 'img' => 'contable.jpg', 'route' => route('admin.pricelists.index')],
                         ['title' => 'Partners', 'img' => 'contable.jpg', 'route' => route('admin.partners.index')],
                         ['title' => 'Configuraciones', 'img' => 'contable.jpg', 'route' => route('admin.accountsettings.edit')],
+                        ['title' => 'Tipos de Diario', 'img' => 'contable.jpg', 'route' => route('admin.journaltypes.index'),  'permission' => 'JournalType List',],
 
 
                     ];
@@ -65,7 +66,7 @@
                             {{ $item['title'] }}
                         </h1>
                     </a> --}}
-
+                    @if (!isset($item['permission']) || auth()->user()->can($item['permission']))
                     <a href="{{ $item['route'] }}"
                         class="group bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-xl hover:scale-105 transition transform overflow-hidden flex flex-col items-center text-center p-2 border-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
                         {{-- <img src="{{ asset('img/' . $item['img']) }}" alt="{{ $item['title'] }}"
@@ -77,6 +78,7 @@
                             {{ $item['title'] }}
                         </h1>
                     </a>
+                    @endif
                 @endforeach
             </div>
         </div>
