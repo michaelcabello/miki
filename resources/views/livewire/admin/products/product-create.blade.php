@@ -70,6 +70,14 @@
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <i class="fa-solid fa-layer-group mr-2"></i> Contabilidad
                 </button>
+
+                <button type="button" wire:click="setTab('subscriptions')"
+                    class="px-4 py-2 rounded-t-xl text-sm font-semibold transition
+                        {{ $tab === 'subscriptions'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fa-solid fa-layer-group mr-2"></i> Suscripciones
+                </button>
             </div>
         </div>
 
@@ -772,7 +780,8 @@
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Cuenta contable
                                 Ventas </label>
-                            <select wire:key="sell-{{ $type }}" wire:model.live="account_sell_id" class="{{ $controlBase }} mt-2">
+                            <select wire:key="sell-{{ $type }}" wire:model.live="account_sell_id"
+                                class="{{ $controlBase }} mt-2">
                                 <option value="">— Seleccionar —</option>
                                 @foreach ($accountOptions as $a)
                                     <option value="{{ $a['id'] }}">{{ $a['label'] }}</option>
@@ -786,7 +795,8 @@
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Cuenta contable
                                 Compras </label>
-                            <select wire:key="buy-{{ $type }}" wire:model.live="account_buy_id" class="{{ $controlBase }} mt-2">
+                            <select wire:key="buy-{{ $type }}" wire:model.live="account_buy_id"
+                                class="{{ $controlBase }} mt-2">
                                 <option value="">— Seleccionar —</option>
                                 @foreach ($accountOptions as $a)
                                     <option value="{{ $a['id'] }}">{{ $a['label'] }}</option>
@@ -805,6 +815,69 @@
                                    text-white font-semibold shadow-sm transition">
                             <i class="fa-regular fa-floppy-disk"></i> Guardar partner
                         </button>
+                    </div>
+                </div>
+            @endif
+
+
+            {{-- TAB: SUBSCRIPTIONS --}}
+            @if ($tab === 'subscriptions')
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Política de Suscripción</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-300">
+                            Configure las reglas por defecto para cuando este producto sea vendido bajo modalidad de
+                            suscripción.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label
+                                class="flex items-center gap-3 cursor-pointer p-4 rounded-xl border border-indigo-100 bg-indigo-50/30 dark:border-indigo-900/30 dark:bg-indigo-900/10">
+                                <input type="checkbox" wire:model.live="is_subscription"
+                                    class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                                <div>
+                                    <span class="block text-sm font-bold text-gray-700 dark:text-gray-200">Se puede
+                                        suscribir</span>
+                                    <span class="text-xs text-gray-500">Si se marca, este producto generará contratos
+                                        recurrentes al venderse.</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        @if ($is_subscription)
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Plan
+                                    Sugerido</label>
+                                <select wire:model.defer="subscription_plan_id"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                                    <option value="">Seleccione el intervalo...</option>
+                                    @foreach ($this->plans as $plan)
+                                        <option value="{{ $plan->id }}">{{ $plan->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Precio de
+                                    Renovación Base</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-3 text-gray-400">$</span>
+                                    <input wire:model.defer="recurring_price" type="number" step="0.01"
+                                        class="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                                </div>
+                            </div>
+
+                            <div
+                                class="md:col-span-2 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 flex gap-3">
+                                <i class="fa-solid fa-lightbulb text-amber-600 mt-1"></i>
+                                <p class="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                                    <b>Nota de Arquitectura:</b> Las fechas y estados se definirán automáticamente en la
+                                    <b>Orden de Venta</b> cuando se asigne un cliente a este servicio.
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif

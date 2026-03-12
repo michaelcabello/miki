@@ -14,6 +14,18 @@ return new class extends Migration
         Schema::create('product_templates', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+
+            // Agregamos los campos de suscripción aquí, sin el método ->after()
+            $table->boolean('is_recurring')
+                ->default(false)
+                ->comment('Define si el producto genera una suscripción al venderse');
+
+            $table->foreignId('subscription_plan_id')
+                ->nullable()
+                ->constrained('subscription_plans')
+                ->onDelete('set null');
+
+
             $table->string('slug')->unique();
 
             $table->enum('type', ['goods', 'service', 'combo'])->default('goods');
@@ -93,6 +105,7 @@ return new class extends Migration
             | Índices
             |--------------------------------------------------------------------------
             */
+
 
             $table->index(['uom_id'], 'i_pt_uom');
             $table->index(['uom_po_id'], 'i_pt_uompo');

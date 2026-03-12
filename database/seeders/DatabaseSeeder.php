@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
          $this->call(DocumentTypesTableSeeder::class);
 
         $this->call([
-
+            SubscriptionPlanSeeder::class,
             CurrencySeeder::class,
             DepartmentSeeder::class,
             ProvinceSeeder::class,

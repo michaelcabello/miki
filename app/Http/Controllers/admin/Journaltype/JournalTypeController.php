@@ -48,7 +48,7 @@ class JournalTypeController extends Controller
 
 
 
-/**
+    /**
      * Exporta a PDF aplicando los filtros activos del listado.
      * Recibe: ?search=xxx&status=active|inactive|all
      */

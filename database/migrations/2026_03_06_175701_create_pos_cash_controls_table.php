@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('pos_cash_controls', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('pos_session_id')
+                ->constrained('pos_sessions')
+                ->onDelete('cascade');
+
+            $table->enum('type', ['opening', 'closing', 'money_in', 'money_out'])
+                ->comment('Momento o tipo de control de flujo');
+
+            $table->string('reason')->comment('Motivo del movimiento de efectivo manual');
+            $table->decimal('amount', 15, 2)->comment('Monto registrado en el control');
+
+            $table->timestamps();
+
+            $table->index('pos_session_id');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('pos_cash_controls');
+    }
+};

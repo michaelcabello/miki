@@ -8,7 +8,9 @@ use App\Models\JournalType;
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Title;
 
+#[Title('Tipos de Diario')]
 class JournalTypeList extends Component
 {
 
@@ -24,6 +26,7 @@ class JournalTypeList extends Component
 
     public $sortField = 'order';      // order|id|code|name|state
     public $sortDirection = 'asc';    // asc|desc
+    public string $title = 'Tipos de Diario';
 
     protected $paginationTheme = 'tailwind';
 
@@ -36,6 +39,7 @@ class JournalTypeList extends Component
     public function mount(): void
     {
         $this->authorize('viewAny', JournalType::class); //para ver la lista eso es viewAny
+         $this->title = 'Tipos de Diario';
     }
 
     public function updatingSearch()

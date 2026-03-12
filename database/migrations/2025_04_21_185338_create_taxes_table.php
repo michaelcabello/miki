@@ -19,6 +19,12 @@ return new class extends Migration
 
             $table->enum('amount_type', ['percent', 'fixed', 'division', 'group']); // Tipo de cálculo
             $table->enum('type_tax_use', ['sale', 'purchase', 'none']); // Dónde se aplica
+
+            // Cuenta contable a la que el impuesto enviará el dinero
+            // Se deja como unsignedBigInteger para vincularla después si es necesario
+            $table->unsignedBigInteger('account_id')->nullable();
+
+
             $table->string('tax_scope')->nullable(); // Ámbito (flexible)
 
             $table->integer('sequence')->default(1); // Orden de cálculo

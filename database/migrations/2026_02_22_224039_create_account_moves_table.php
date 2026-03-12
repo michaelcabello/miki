@@ -20,10 +20,10 @@ return new class extends Migration
                 ->constrained('point_of_sales')
                 ->nullOnDelete();
 
-            $table->foreignId('journal_secuence_id')
+            /* $table->foreignId('secuence_id')
                 ->nullable()
-                ->constrained('journal_secuences')
-                ->nullOnDelete();
+                ->constrained('secuences')
+                ->nullOnDelete(); */
 
             // Número del documento/asiento: F001-00000001
             $table->string('name', 60)->nullable();

@@ -86,4 +86,15 @@ class ProductTemplate extends Model
             ->withTimestamps()
             ->orderBy('pivot_sequence');
     }
+
+
+    public function defaultPlan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
 }

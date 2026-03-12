@@ -119,15 +119,9 @@ Route::get('products', [ProductController::class, 'index'])->name('admin.product
 Route::get('admin/products/{product_template}/variants', VariantsIndex::class)->name('admin.products.variants');
 
 Route::resource('brands', BrandController::class)->names('admin.brands');
-
-Route::get('brands/export/excel', [BrandController::class, 'exportExcel'])
-    ->name('admin.brands.export.excel');
-
-Route::get('brands/export/pdf', [BrandController::class, 'exportPdf'])
-    ->name('admin.brands.export.pdf');
-
-Route::post('brands/import', [BrandController::class, 'import'])
-    ->name('admin.brands.import');
+Route::get('brands/export/excel', [BrandController::class, 'exportExcel'])->name('admin.brands.export.excel');
+Route::get('brands/export/pdf', [BrandController::class, 'exportPdf'])->name('admin.brands.export.pdf');
+Route::post('brands/import', [BrandController::class, 'import'])->name('admin.brands.import');
 
 Route::get('/pos-demo', PosDemo::class)->name('admin.pos.demo');
 
@@ -147,4 +141,4 @@ Route::get('journal-types/create', JournalTypeCreate::class)->middleware('permis
 Route::get('journal-types/{jt}/edit', JournalTypeEdit::class)->middleware('permission:JournalType Update')->name('admin.journaltypes.edit');
 Route::get('journal-types-export-excel', [JournalTypeController::class, 'exportExcel'])->name('admin.journaltypes.export.excel');
 Route::get('journal-types-export-pdf', [JournalTypeController::class, 'exportPdf'])->name('admin.journaltypes.export.pdf');
-Route::post('journal-types-import', [JournalTypeController::class, 'import'])->name('admin.journaltypes.import');
+Route::post('journal-types/import', [JournalTypeController::class, 'import'])->name('admin.journaltypes.import');

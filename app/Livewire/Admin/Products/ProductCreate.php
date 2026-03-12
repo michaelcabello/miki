@@ -17,12 +17,25 @@ use App\Models\Tax;
 use App\Models\Detraction;
 use App\Models\Brand;
 use App\Models\Modello;
-
+use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 //php artisan make:livewire Admin/Products/ProductCreate
 class ProductCreate extends Component
 {
+
+    // En tu componente Livewire (ProductTemplateForm.php o similar)
+
+    public $is_subscription = false; // Solo para controlar la UI (frontend)
+
+    // Variables que se guardarán en la DB
+    public $subscription_plan_id;
+    public $recurring_price;
+    public $start_date;
+    public $status = 'active';
+
+
 
     // Product template
     public string $name = '';
@@ -202,6 +215,13 @@ class ProductCreate extends Component
         // Set inicial según el type actual
         $this->applyAccountDefaultsByType();
     }
+
+    // Para mostrar los planes en el select
+    public function getPlansProperty()
+    {
+        return SubscriptionPlan::where('active', true)->get();
+    }
+
 
 
     public function updatedType($value): void
@@ -532,6 +552,21 @@ class ProductCreate extends Component
 
             'account_sell_id' => ['required', 'exists:accounts,id'],
             'account_buy_id'  => ['required', 'exists:accounts,id'],
+
+            // NUEVAS VALIDACIONES PARA SUSCRIPCIÓN
+            'is_subscription' => ['boolean'],
+            'subscription_plan_id' => [
+                Rule::requiredIf($this->is_subscription),
+                'nullable',
+                'exists:subscription_plans,id'
+            ],
+            'recurring_price' => [
+                Rule::requiredIf($this->is_subscription),
+                'nullable',
+                'numeric',
+                'min:0'
+            ],
+
         ]);
 
         if ($this->modello_id && $this->brand_id) {
@@ -595,6 +630,11 @@ class ProductCreate extends Component
 
             'account_sell_id' => $this->account_sell_id, // ✅ cuenta contable VENTAS (70xx)
             'account_buy_id'  => $this->account_buy_id,  // ✅ cuenta contable COMPRAS (60xx)
+
+            // CAMPOS DE SUSCRIPCIÓN (MAESTROS)
+            'is_subscription' => $this->is_subscription,
+            'subscription_plan_id' => $this->is_subscription ? $this->subscription_plan_id : null,
+            'recurring_price' => $this->is_subscription ? $this->recurring_price : null,
 
         ]);
 

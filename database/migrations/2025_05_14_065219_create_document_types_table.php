@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('codsunat', 5)->nullable();
             $table->string('name', 80)->nullable();             // Registro Único..., Documento Nacional...
-             $table->string('code', 20)->nullable();   // RUC, DNI, CE, PAS
+            $table->string('code', 20)->nullable();   // RUC, DNI, CE, PAS
             $table->unsignedInteger('length')->nullable(); // 8, 11, etc (opcional)
             $table->boolean('state')->default(true);
             $table->unsignedInteger('order')->default(10);
+
             $table->timestamps();
 
             $table->index(['state', 'order'], 'i_doc_types_state_order');

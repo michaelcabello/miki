@@ -86,7 +86,6 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'JournalType Create', 'display_name' => 'Crear tipo de diario', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'JournalType Update', 'display_name' => 'Actualizar tipo de diario', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'JournalType Delete', 'display_name' => 'Eliminar tipo de diario', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
-
         Permission::create(['name' => 'JournalType ExportExcel', 'display_name' => 'Exportar tipos de diarios a Excel', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'JournalType ExportPdf', 'display_name' => 'Exportar tipos de diarios a PDF', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'JournalType ImportExcel', 'display_name' => 'Importar tipos de diarios de Excel', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
