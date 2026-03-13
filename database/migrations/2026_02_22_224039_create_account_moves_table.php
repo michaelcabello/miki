@@ -11,53 +11,64 @@ return new class extends Migration
     {
         Schema::create('account_moves', function (Blueprint $table) {
             $table->id();
-              $table->foreignId('journal_id')
-                ->constrained('journals')
-                ->restrictOnDelete();
+            $table->string('name')->unique()->comment('Fiscal number: F001-00000001');
+            $table->enum('move_type', [
+                'out_invoice', // Factura de cliente (Venta)
+                'in_invoice',  // Factura de proveedor (Compra)
+                'out_refund',  // Nota de crédito enviada al cliente (Anulación de venta)
+                'in_refund',   // Nota de crédito recibida del proveedor (Anulación de compra)
+                'entry'        // Asiento contable manual / Operaciones diversas
+            ])->comment('Define la naturaleza contable y dirección del flujo de dinero (Venta, Compra, Devolución o Ajuste)');
 
-            $table->foreignId('pos_id')
-                ->nullable()
-                ->constrained('point_of_sales')
-                ->nullOnDelete();
+            $table->enum('state', ['draft', 'posted', 'cancel'])->default('draft')->index();
+            $table->foreignId('journal_id')->constrained('journals')->restrictOnDelete();
+            $table->foreignId('point_of_sale_id')->nullable()->constrained('point_of_sales')->nullOnDelete();
+            $table->foreignId('partner_id')->constrained('partners')->comment('Customer or supplier reference');
+            //$table->foreignId('comprobante_series_id')->constrained('comprobante_series')->comment('Used series for this document');
+
+            $table->foreignId('comprobante_series_id')
+                ->constrained('comprobante_series')
+                ->comment('Referencia fija a la serie utilizada para este comprobante');
+
+            // Totales
+            $table->decimal('amount_untaxed', 15, 4)->default(0);
+            $table->decimal('amount_tax', 15, 4)->default(0);
+            $table->decimal('amount_total', 15, 4)->default(0);
+
+            $table->date('date')->comment('Fiscal issuance date');
+
+            // Orígenes opcionales
+            $table->foreignId('sale_order_id')->nullable()->constrained('sale_orders');
+            $table->foreignId('pos_order_id')->nullable()->constrained('pos_orders');
+            $table->foreignId('purchase_order_id')->nullable()->constrained('purchase_orders');
+
+            // Referencia para Notas de Crédito
+            $table->foreignId('reversed_entry_id')->nullable()->constrained('account_moves')->nullOnDelete();
+            $table->foreignId('reversal_reason_id')->nullable()->constrained('comprobante_reversal_reasons');
 
             /* $table->foreignId('secuence_id')
                 ->nullable()
                 ->constrained('secuences')
                 ->nullOnDelete(); */
 
-            // Número del documento/asiento: F001-00000001
-            $table->string('name', 60)->nullable();
-
-            // invoice|receipt|refund|debit_note|entry
-            $table->string('move_type', 30)->default('entry');
-
-            $table->date('date');
 
             $table->string('ref', 120)->nullable();
 
-            // Si tienes tabla partners luego lo conviertes en FK
-            $table->unsignedBigInteger('partner_id')->nullable();
+            $table->foreignId('currency_id')->nullable()->constrained('currencies')->nullOnDelete();
 
-            $table->foreignId('currency_id')
-                ->nullable()
-                ->constrained('currencies')
-                ->nullOnDelete();
+            $table->decimal('total_debit', 15, 4)->default(0);
+            $table->decimal('total_credit', 15, 4)->default(0);
 
-            $table->decimal('total_debit', 14, 2)->default(0);
-            $table->decimal('total_credit', 14, 2)->default(0);
 
-            // draft|posted|cancel
-            $table->string('state', 10)->default('draft');
             $table->timestamp('posted_at')->nullable();
 
             $table->timestamps();
 
             $table->index(['journal_id', 'date']);
-            $table->index(['pos_id', 'date']);
+            $table->index(['point_of_sale_id', 'date']);
 
             // Único global si quieres (opcional). Si prefieres permitir null repetidos:
             $table->unique('name', 'uniq_move_name');
-
         });
     }
 

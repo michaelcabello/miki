@@ -47,10 +47,7 @@ class ProductTemplate extends Model
         return $this->hasMany(\App\Models\ProductTemplateAttribute::class);
     }
 
-    public function variants()
-    {
-        return $this->hasMany(ProductVariant::class);
-    }
+
 
     //public function defaultVariant()
     public function nonDefaultVariants()
@@ -96,5 +93,34 @@ class ProductTemplate extends Model
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
+    }
+
+
+
+
+    // Relación "Has Many Through" para obtener todas las imágenes de todas sus variantes
+    /* public function images()
+    {
+        return $this->hasManyThrough(
+            ProductImage::class,
+            ProductVariant::class,
+            'product_template_id',
+            'product_variant_id'
+        );
+    } */
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    /**
+     * Obtiene la variante por defecto (la que no tiene atributos o es marcada como principal)
+     */
+    public function defaultVariant()
+    {
+        return $this->hasOne(ProductVariant::class, 'product_template_id')
+            ->where('is_default', true)
+            ->withDefault(); // Evita errores si no existe
     }
 }

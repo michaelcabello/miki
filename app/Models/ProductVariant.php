@@ -36,8 +36,22 @@ class ProductVariant extends Model
         )->withTimestamps();
     }
 
-    public function productTemplate()
+    /* public function productTemplate()
     {
         return $this->belongsTo(ProductTemplate::class);
+    } */
+
+
+
+    // Una variante puede tener muchas imágenes (galería)
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class, 'product_variant_id')->orderBy('sort_order');
     }
+
+    // Relación de conveniencia para obtener solo la imagen principal
+    /* public function mainImage()
+    {
+        return $this->hasOne(ProductImage::class, 'product_variant_id')->where('is_main', true);
+    } */
 }

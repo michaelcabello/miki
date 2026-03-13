@@ -38,6 +38,7 @@ use App\Livewire\Admin\Journaltype\JournalTypeList;
 use App\Livewire\Admin\Partner\PartnerCreate;
 use App\Livewire\Admin\Partner\PartnerEdit;
 use App\Livewire\Admin\Pos\PosDemo;
+use App\Livewire\Admin\Products\Images\Index as ProductImagesIndex;
 
 
 Route::get('/hola', function () {
@@ -116,7 +117,10 @@ Route::resource('pricelists', PricelistController::class)->names('admin.pricelis
 Route::get('pricelist/{pricelist}/items', PricelistItemManager::class)->name('admin.pricelists.items');
 Route::get('products', [ProductController::class, 'index'])->name('admin.products.index');
 
-Route::get('admin/products/{product_template}/variants', VariantsIndex::class)->name('admin.products.variants');
+Route::get('/products/{productTemplate}/images', ProductImagesIndex::class)->name('admin.products.images');
+
+
+Route::get('/products/{product_template}/variants', VariantsIndex::class)->name('admin.products.variants');
 
 Route::resource('brands', BrandController::class)->names('admin.brands');
 Route::get('brands/export/excel', [BrandController::class, 'exportExcel'])->name('admin.brands.export.excel');

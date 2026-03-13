@@ -78,6 +78,14 @@
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <i class="fa-solid fa-layer-group mr-2"></i> Suscripciones
                 </button>
+
+                 <button type="button" wire:click="setTab('images')"
+                    class="px-4 py-2 rounded-t-xl text-sm font-semibold transition
+                        {{ $tab === 'images'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fa-solid fa-layer-group mr-2"></i> Imágenes
+                </button>
             </div>
         </div>
 
@@ -882,6 +890,8 @@
                 </div>
             @endif
 
+            @if ($tab === 'images')
+            @endif
 
         </div>
     </div>
