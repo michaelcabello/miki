@@ -51,6 +51,8 @@
                         ['title' => 'Partners', 'img' => 'contable.jpg', 'route' => route('admin.partners.index')],
                         ['title' => 'Configuraciones', 'img' => 'contable.jpg', 'route' => route('admin.accountsettings.edit')],
                         ['title' => 'Tipos de Diario', 'img' => 'contable.jpg', 'route' => route('admin.journaltypes.index'),  'permission' => 'JournalType List',],
+                        ['title' => 'Diarios', 'img' => 'contable.jpg', 'route' => route('admin.journals.index'),  'permission' => 'Journal List',],
+                        ['title' => 'Compañia', 'img' => 'contable.jpg', 'route' => route('admin.company.edit')],//hay que agregar su permiso como journaltypes
 
 
                     ];

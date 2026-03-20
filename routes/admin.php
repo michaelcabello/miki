@@ -29,9 +29,14 @@ use App\Livewire\Admin\Pricelist\PricelistItemManager;
 use App\Livewire\Admin\Products\VariantsIndex;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\Brand\BrandController;
+use App\Http\Controllers\Admin\Journal\JournalController;
 use App\Http\Controllers\Admin\Journaltype\JournalTypeController;
 use App\Http\Controllers\Admin\Partner\PartnerController;
 use App\Livewire\Admin\Accountsetting\AccountSettingEdit;
+use App\Livewire\Admin\Company\CompanyEdit;
+use App\Livewire\Admin\Journal\JournalCreate;
+use App\Livewire\Admin\Journal\JournalEdit;
+use App\Livewire\Admin\Journal\JournalList;
 use App\Livewire\Admin\Journaltype\JournalTypeCreate;
 use App\Livewire\Admin\Journaltype\JournalTypeEdit;
 use App\Livewire\Admin\Journaltype\JournalTypeList;
@@ -146,3 +151,19 @@ Route::get('journal-types/{jt}/edit', JournalTypeEdit::class)->middleware('permi
 Route::get('journal-types-export-excel', [JournalTypeController::class, 'exportExcel'])->name('admin.journaltypes.export.excel');
 Route::get('journal-types-export-pdf', [JournalTypeController::class, 'exportPdf'])->name('admin.journaltypes.export.pdf');
 Route::post('journal-types/import', [JournalTypeController::class, 'import'])->name('admin.journaltypes.import');
+
+
+
+// Exportar / Importar (antes del recurso)
+Route::get('journals/export/excel',  [JournalController::class, 'exportExcel'])->name('admin.journals.export.excel');
+Route::get('journals/export/pdf',    [JournalController::class, 'exportPdf'])->name('admin.journals.export.pdf');
+Route::post('journals/import',       [JournalController::class, 'import'])->name('admin.journals.import');
+
+// CRUD principal con Livewire
+Route::get('journals', JournalList::class)->name('admin.journals.index');
+Route::get('journals/create', JournalCreate::class)->name('admin.journals.create');
+Route::get('journals/{record}/edit',  JournalEdit::class)->name('admin.journals.edit');
+
+
+
+Route::get('company/edit', CompanyEdit::class)->name('admin.company.edit');

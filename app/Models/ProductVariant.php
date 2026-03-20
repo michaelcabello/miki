@@ -46,7 +46,7 @@ class ProductVariant extends Model
     // Una variante puede tener muchas imágenes (galería)
     public function images()
     {
-        return $this->hasMany(ProductImage::class, 'product_variant_id')->orderBy('sort_order');
+        return $this->hasMany(ProductImage::class, 'product_variant_id')->orderBy('sort_order')->orderBy('id');
     }
 
     // Relación de conveniencia para obtener solo la imagen principal
@@ -54,4 +54,10 @@ class ProductVariant extends Model
     {
         return $this->hasOne(ProductImage::class, 'product_variant_id')->where('is_main', true);
     } */
+
+    public function primaryImage()
+    {
+        return $this->hasOne(ProductImage::class, 'product_variant_id')
+            ->where('is_primary', true);
+    }
 }

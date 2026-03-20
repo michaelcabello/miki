@@ -90,6 +90,18 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'JournalType ExportPdf', 'display_name' => 'Exportar tipos de diarios a PDF', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'JournalType ImportExcel', 'display_name' => 'Importar tipos de diarios de Excel', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
 
+        Permission::create(['name' => 'Journal List', 'display_name' => 'Listar diarios', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Journal View', 'display_name' => 'Ver diario', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Journal Create', 'display_name' => 'Crear diario', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Journal Update', 'display_name' => 'Actualizar diario', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Journal Delete', 'display_name' => 'Eliminar diario', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Journal ExportExcel', 'display_name' => 'Exportar diarios a Excel', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Journal ExportPdf', 'display_name' => 'Exportar diarios a PDF', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Journal ImportExcel', 'display_name' => 'Importar diarios de Excel', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
+
+
+
+
         User::find(1)->assignRole($adminRole);
         User::find(2)->assignRole($sellerRole);
         User::find(3)->assignRole($grocerRole);

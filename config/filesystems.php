@@ -41,24 +41,43 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],
 
-        's3' => [
+        //sera el publico
+
+        's3_public' => [
             'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
+            'key' => env('AWS_PUBLIC_KEY'),
+            'secret' => env('AWS_PUBLIC_SECRET'),
+            'region' => env('AWS_PUBLIC_REGION'),
+            'bucket' => env('AWS_BUCKET_PUBLIC'),
+            'url' => env('AWS_URL_PUBLIC'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'public',
             'throw' => false,
-            'report' => false,
         ],
+
+        //sera el privado
+        's3_private' => [
+            'driver' => 's3',
+            'key' => env('AWS_PRIVATE_KEY'),
+            'secret' => env('AWS_PRIVATE_SECRET'),
+            'region' => env('AWS_PRIVATE_REGION'),
+            'bucket' => env('AWS_BUCKET_PRIVATE'),
+            'url' => env('AWS_URL_PRIVATE'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+
+
 
     ],
 

@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('ruc')->nullable();
             $table->string('razonsocial')->nullable();
             $table->string('nombrecomercial')->nullable();
-
+            $table->string('razonsocialaws')->nullable();//este campo se crea para que cuando cambien algo en la razon social principal no afecte a la generacion de imagenes en aws
+            //este campo no se muestra estara oculto para el usuario
             $table->string('direccion')->nullable();
             $table->string('celular')->nullable();
             $table->string('telefono')->nullable();

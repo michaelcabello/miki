@@ -172,6 +172,21 @@
                 });
             });
 
+            Livewire.on('notifyd', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    icon: data.icon ?? data.type ?? 'success',
+                    title: data.title ?? data.message ?? 'Operación realizada correctamente',
+                    text: data.text ?? '',
+                });
+            });
+
 
             //inicia eliminar
             /* window.confirmDeletesimple = function(id, eventName = 'deleteSingle', message =

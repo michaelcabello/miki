@@ -180,20 +180,6 @@
                             <div class="flex justify-center gap-2">
 
 
-                                <div class="flex justify-center gap-2">
-
-                                    <button
-                                        wire:click="$dispatch('openImageManager', { variantId: {{ $product_template->defaultVariant->id }} })"
-                                        class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 transition"
-                                        title="Gestionar Imágenes">
-                                        <i class="fa-solid fa-images"></i>
-                                        <span
-                                            class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 whitespace-nowrap">
-                                            Imágenes
-                                        </span>
-                                    </button>
-
-                                </div>
 
                                 <a href="{{ route('admin.products.images', $product_template) }}"
                                     class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-purple-600 transition">
