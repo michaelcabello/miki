@@ -10,10 +10,23 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // Importar el trait
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
 
+
+use App\Exports\AttributesExport;
+use App\Imports\AttributesImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use App\Support\AuthorizesPermissions;
+
 //php artisan make:controller Admin/Attribute/AttributeController --resource --model=Attribute
+/**
+ * Controlador de Atributos.
+ * Maneja exportación (Excel/PDF) e importación.
+ * El CRUD principal se gestiona con Livewire.
+ */
 class AttributeController extends Controller
 {
-    use AuthorizesRequests, ValidatesRequests; // Usa el trait aquí explícitamente
+    use AuthorizesPermissions, AuthorizesRequests, ValidatesRequests; // Usa el trait aquí explícitamente
 
     public function index()
     {
@@ -87,6 +100,122 @@ class AttributeController extends Controller
     /**
      * Display the specified resource.
      */
+
+
+    public function exportExcel(Request $request)
+    {
+        $this->authorizePermission('Attribute ExportExcel');
+
+        // Recoge y sanitiza los filtros
+        $search = trim((string) $request->query('search', ''));
+        $status = in_array($request->query('status'), ['active', 'inactive', 'all'])
+            ? $request->query('status')
+            : 'all';
+
+        try {
+            return Excel::download(
+                new AttributesExport($search, $status),
+                'attributes_' . date('Y-m-d_His') . '.xlsx'
+            );
+        } catch (\Throwable $e) {
+            session()->flash('swal', [
+                'icon'  => 'error',
+                'title' => 'Error',
+                'text'  => 'Error al exportar: ' . $e->getMessage(),
+            ]);
+
+            return back();
+        }
+    }
+
+    /**
+     * Exporta atributos a PDF aplicando los filtros activos del listado.
+     */
+    public function exportPdf(Request $request)
+    {
+        $this->authorizePermission('Attribute ExportPdf');
+
+        $search = trim((string) $request->query('search', ''));
+        $status = in_array($request->query('status'), ['active', 'inactive', 'all'])
+            ? $request->query('status')
+            : 'all';
+
+        try {
+            $query = Attribute::query();
+
+            if ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+
+            if ($status === 'active') {
+                $query->where('state', true);
+            } elseif ($status === 'inactive') {
+                $query->where('state', false);
+            }
+
+            // Incluimos conteo de valores para el PDF
+            $items   = $query->withCount('values')->orderBy('order')->orderBy('name')->get();
+            $company = \App\Models\Company::first();
+
+            $pdf = Pdf::loadView(
+                'admin.attributes.attributes-pdf',
+                compact('items', 'company', 'search', 'status')
+            )->setPaper('a4', 'portrait');
+
+            return $pdf->download('reporte_attributes_' . date('Y-m-d_His') . '.pdf');
+        } catch (\Throwable $e) {
+            session()->flash('swal', [
+                'icon'  => 'error',
+                'title' => 'Error',
+                'text'  => 'Error al generar PDF: ' . $e->getMessage(),
+            ]);
+
+            return back();
+        }
+    }
+
+    /**
+     * Importa atributos desde un archivo Excel/CSV.
+     */
+    public function import(Request $request)
+    {
+        $this->authorizePermission('Attribute ImportExcel');
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            Excel::import(new AttributesImport, $request->file('file'));
+
+            DB::commit();
+
+            session()->flash('swal', [
+                'icon'  => 'success',
+                'title' => 'Importado',
+                'text'  => 'Atributos importados correctamente',
+            ]);
+
+            return redirect()->route('admin.attributes.index');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            session()->flash('swal', [
+                'icon'  => 'error',
+                'title' => 'Error',
+                'text'  => 'Error al importar: ' . $e->getMessage(),
+            ]);
+
+            return back();
+        }
+    }
+
+
+
+
+
     public function show(Attribute $attribute)
     {
         //

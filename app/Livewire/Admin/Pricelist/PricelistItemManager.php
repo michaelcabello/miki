@@ -11,6 +11,7 @@ use App\Models\PricelistItem;
 use App\Models\ProductTemplate;
 use App\Models\ProductVariant;
 use App\Models\Category;
+use Livewire\Attributes\On;
 
 // php artisan make:livewire Admin/Pricelist/PricelistItemManager
 class PricelistItemManager extends Component
@@ -18,9 +19,10 @@ class PricelistItemManager extends Component
     use WithPagination;
 
     public Pricelist $pricelist;
-
     public string $search = '';
     public int $perPage = 10;
+
+    //public $editing = []; // Almacena temporalmente los datos de la fila en edición
 
     // Para selects livianos
     public string $productSearch = '';
@@ -60,6 +62,209 @@ class PricelistItemManager extends Component
     {
         $this->pricelist = $pricelist;
     }
+
+
+    /**
+     * Reglas de validación unificadas (Single Source of Truth)
+     * @param string $prefix Útil para diferenciar entre 'new' y 'row.id'
+     */
+    protected function getValidationRules($prefix = 'new.'): array
+    {
+        return [
+            $prefix . 'applied_on' => ['required', Rule::in(['all', 'category', 'template', 'variant'])],
+
+            // Validación condicional: El ID es obligatorio según el ámbito
+            $prefix . 'category_id' => [
+                Rule::requiredIf(fn() => data_get($this, $prefix . 'applied_on') === 'category'),
+                'nullable',
+                'exists:categories,id'
+            ],
+            $prefix . 'product_template_id' => [
+                Rule::requiredIf(fn() => data_get($this, $prefix . 'applied_on') === 'template'),
+                'nullable',
+                'exists:product_templates,id'
+            ],
+            $prefix . 'product_variant_id' => [
+                Rule::requiredIf(fn() => data_get($this, $prefix . 'applied_on') === 'variant'),
+                'nullable',
+                'exists:product_variants,id'
+            ],
+
+            $prefix . 'sequence' => ['required', 'integer', 'min:0'],
+            $prefix . 'min_qty' => ['required', 'numeric', 'min:1'],
+            $prefix . 'compute_method' => ['required', Rule::in(['fixed', 'discount', 'formula'])],
+
+            // Precio fijo es requerido SOLO si el método es fixed
+            $prefix . 'fixed_price' => [
+                Rule::requiredIf(fn() => data_get($this, $prefix . 'compute_method') === 'fixed'),
+                'nullable',
+                'numeric',
+                'min:0'
+            ],
+
+            // Descuento requerido SOLO si el método es discount
+            $prefix . 'percent_discount' => [
+                Rule::requiredIf(fn() => data_get($this, $prefix . 'compute_method') === 'discount'),
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:100'
+            ],
+
+            // Campos de fórmula
+            $prefix . 'base' => [
+                Rule::requiredIf(fn() => data_get($this, $prefix . 'compute_method') === 'formula'),
+                'nullable',
+                Rule::in(['price_sale', 'cost', 'other_pricelist'])
+            ],
+            $prefix . 'base_pricelist_id' => [
+                Rule::requiredIf(fn() => data_get($this, $prefix . 'compute_method') === 'formula' && data_get($this, $prefix . 'base') === 'other_pricelist'),
+                'nullable',
+                'exists:pricelists,id'
+            ],
+            $prefix . 'price_multiplier' => ['nullable', 'numeric'],
+            $prefix . 'price_surcharge' => ['nullable', 'numeric'],
+            $prefix . 'rounding' => ['nullable', 'numeric'],
+            $prefix . 'min_margin' => ['nullable', 'numeric'],
+            $prefix . 'max_margin' => ['nullable', 'numeric'],
+
+            $prefix . 'date_start' => ['nullable', 'date'],
+            $prefix . 'date_end' => ['nullable', 'date', 'after_or_equal:' . $prefix . 'date_start'],
+            $prefix . 'active' => ['boolean'],
+        ];
+    }
+
+    /**
+     * Helper para limpiar datos antes de guardar (Odoo Logic)
+     * Evita que persistan precios fijos si cambiaste a fórmula, etc.
+     */
+    private function cleanData(array $data): array
+    {
+        $method = $data['compute_method'] ?? 'fixed';
+        $applied = $data['applied_on'] ?? 'all';
+
+        // 1. Limpieza por método
+        if ($method !== 'fixed') $data['fixed_price'] = null;
+        if ($method !== 'discount') $data['percent_discount'] = null;
+        if ($method !== 'formula') {
+            $data['base'] = 'price_sale';
+            $data['base_pricelist_id'] = null;
+            $data['price_multiplier'] = 1.0; // Odoo default
+            $data['price_surcharge'] = 0.0;
+            $data['rounding'] = 0.0;
+            $data['min_margin'] = 0.0;
+            $data['max_margin'] = 0.0;
+        }
+
+        // 2. Limpieza por ámbito (Applied On)
+        if ($applied !== 'category') $data['category_id'] = null;
+        if ($applied !== 'template') $data['product_template_id'] = null;
+        if ($applied !== 'variant') $data['product_variant_id'] = null;
+
+        return $data;
+    }
+
+
+    public function addLineBack()
+    {
+        $this->validate($this->getValidationRules('new.'));
+
+        $data = $this->cleanData($this->new);
+
+        // SUGERENCIA: Verificar duplicados (Pricelist + AppliedOn + ID + MinQty)
+        $exists = PricelistItem::where('pricelist_id', $this->pricelist->id)
+            ->where('applied_on', $data['applied_on'])
+            ->where('category_id', $data['category_id'])
+            ->where('product_template_id', $data['product_template_id'])
+            ->where('product_variant_id', $data['product_variant_id'])
+            ->where('min_qty', $data['min_qty'])
+            ->exists();
+
+        if ($exists) {
+            $this->addError('new.applied_on', 'Ya existe una regla idéntica para esta cantidad.');
+            return;
+        }
+
+        PricelistItem::create([
+            'pricelist_id' => $this->pricelist->id,
+            ...$data
+        ]);
+
+        $this->reset('new'); // Reset completo a valores iniciales
+        $this->dispatch('swal', icon: 'success', title: 'Regla agregada');
+    }
+
+
+    public function addLinebackdos()
+    {
+        $this->validate($this->getValidationRules('new.'));
+
+        $data = $this->cleanData($this->new);
+
+        if (isset($this->new['id'])) {
+            // MODO EDICIÓN
+            $item = PricelistItem::findOrFail($this->new['id']);
+            $item->update($data);
+            $this->dispatch('swal', icon: 'success', title: 'Regla actualizada');
+        } else {
+            // MODO CREACIÓN
+            // (Opcional) Aquí puedes mantener tu validación de duplicados que ya tienes
+            PricelistItem::create([
+                'pricelist_id' => $this->pricelist->id,
+                ...$data
+            ]);
+            $this->dispatch('swal', icon: 'success', title: 'Regla agregada');
+        }
+
+        $this->resetForm();
+    }
+
+
+public function addLine()
+{
+    // 1. Validamos usando tus reglas centralizadas
+    $this->validate($this->rulesNew());
+
+    // 2. Limpiamos los datos (quitar precios fijos si es descuento, etc.)
+    $data = $this->cleanData($this->new);
+
+    // 3. Verificamos duplicados (excepto si estamos editando el mismo registro)
+    $exists = \App\Models\PricelistItem::where('pricelist_id', $this->pricelist->id)
+        ->where('applied_on', $data['applied_on'])
+        ->where('min_qty', $data['min_qty'])
+        ->where(function ($query) use ($data) {
+            if ($data['applied_on'] === 'category') $query->where('category_id', $data['category_id']);
+            if ($data['applied_on'] === 'template') $query->where('product_template_id', $data['product_template_id']);
+            if ($data['applied_on'] === 'variant')  $query->where('product_variant_id', $data['product_variant_id']);
+        })
+        ->when(isset($this->new['id']), fn($q) => $q->where('id', '!=', $this->new['id']))
+        ->exists();
+
+    if ($exists) {
+        $this->addError('new.applied_on', 'Ya existe una regla idéntica.');
+        return;
+    }
+
+    // 4. GUARDADO (Esta es la parte que faltaba)
+    if (isset($this->new['id'])) {
+        // MODO EDICIÓN
+        $item = PricelistItem::findOrFail($this->new['id']);
+        $item->update($data);
+        $title = 'Regla actualizada';
+    } else {
+        // MODO CREACIÓN
+        PricelistItem::create([
+            'pricelist_id' => $this->pricelist->id,
+            ...$data
+        ]);
+        $title = 'Regla agregada';
+    }
+
+    // 5. Limpiar y Notificar
+    $this->resetForm();
+    $this->dispatch('swal', icon: 'success', title: '¡Hecho!', text: $title);
+}
+
 
     public function updatingSearch()
     {
@@ -179,7 +384,7 @@ class PricelistItemManager extends Component
         $this->dispatch('swal', icon: 'success', title: 'Bien Hecho', text: 'Regla agregada.');
     } */
 
-    public function addLine()
+    public function addLineAntiguo()
     {
         $this->validate($this->rulesNew());
 
@@ -225,8 +430,21 @@ class PricelistItemManager extends Component
     }
 
 
+    // Función auxiliar para limpiar campos que no corresponden al método elegido
+    private function prepareData($input)
+    {
+        if ($input['compute_method'] == 'fixed') {
+            $input['percent_discount'] = 0;
+            $input['price_multiplier'] = 1;
+        }
+        if ($input['compute_method'] == 'discount') {
+            $input['fixed_price'] = 0;
+            $input['price_multiplier'] = 1;
+        }
+        return $input;
+    }
 
-    public function startEdit(int $id)
+    public function startEditcorregido(int $id)
     {
         $item = PricelistItem::where('pricelist_id', $this->pricelist->id)->findOrFail($id);
 
@@ -259,7 +477,7 @@ class PricelistItemManager extends Component
         unset($this->editing[$id], $this->row[$id]);
     }
 
-    public function save(int $id)
+    public function saveantiguo(int $id)
     {
         $item = PricelistItem::where('pricelist_id', $this->pricelist->id)->findOrFail($id);
 
@@ -306,11 +524,55 @@ class PricelistItemManager extends Component
         $this->dispatch('swal', icon: 'success', title: 'Guardado', text: 'Regla actualizada.');
     }
 
-    public function deleteSingle(int $id)
+
+    public function save(int $id)
     {
-        PricelistItem::where('pricelist_id', $this->pricelist->id)->where('id', $id)->delete();
-        $this->dispatch('swal', icon: 'success', title: 'Eliminado', text: 'Regla eliminada.');
+
+        // Validamos usando el prefijo de la fila específica en el array $row
+        $this->validate($this->getValidationRules("row.{$id}."));
+
+        $item = PricelistItem::where('pricelist_id', $this->pricelist->id)->findOrFail($id);
+        $data = $this->cleanData($this->row[$id]);
+
+        $item->update($data);
+
+        $this->dispatch(
+            'notifyd',
+            title: 'TICOM',
+            text: 'La información de la empresa fue actualizada correctamente.',
+            icon: 'success'
+        );
+
+        $this->cancelEdit($id);
     }
+
+    #[On('deleteSingle')]
+    public function deleteSingle($id, $name)
+    {
+        //PricelistItem::where('pricelist_id', $this->pricelist->id)->where('id', $id)->delete();
+        //$this->dispatch('swal', icon: 'success', title: 'Eliminado', text: 'Regla eliminada.');
+
+        $item = PricelistItem::findOrFail($id);
+        $item->delete();
+
+        // Opcional: Notificación con SweetAlert2 si lo tienes configurado
+        $this->dispatch('swal', [
+            'title' => 'Eliminado',
+            'text' => 'La regla ha sido eliminada correctamente.',
+            'icon' => 'success'
+        ]);
+        $this->dispatch('itemDeleted', title: 'TICOM', text: 'La regla ' . $name . ' con ID ' . $id . ' fue eliminado correctamente.', icon: 'success');
+    }
+
+    /* #[On('deleteSingle')]
+    public function deleteSingle($id, $name)
+    {
+        Category::find($id)?->delete();
+
+        //$this->dispatch('itemDeleted', title: 'TICOM', text: 'El usuario con {{$id}} fue eliminado correctamente.', icon: 'success');
+        $this->dispatch('itemDeleted', title: 'TICOM', text: 'La categoría ' . $name . ' con ID ' . $id . ' fue eliminado correctamente.', icon: 'success');
+    } */
+
 
 
 
@@ -402,5 +664,76 @@ class PricelistItemManager extends Component
         }
 
         return $out;
+    }
+
+    public function editLine($id)
+    {
+        $rule = PricelistItem::findOrFail($id);
+        $this->new = $rule->toArray();
+        // Asegúrate de que las fechas estén en formato Y-m-d para los inputs
+        $this->new['date_start'] = $rule->date_start ? $rule->date_start->format('Y-m-d') : null;
+        $this->new['date_end'] = $rule->date_end ? $rule->date_end->format('Y-m-d') : null;
+    }
+
+    public function resetFormBack()
+    {
+        $this->new = ['applied_on' => 'all', 'compute_method' => 'fixed', 'active' => true, 'sequence' => 1, 'base' => 'price_sale'];
+        $this->resetErrorBag();
+    }
+
+
+    public function resetForm()
+    {
+        $this->new = [
+            'applied_on' => 'all',
+            'category_id' => null,
+            'product_template_id' => null,
+            'product_variant_id' => null,
+            'sequence' => 10,
+            'min_qty' => 1,
+            'compute_method' => 'fixed',
+            'fixed_price' => null,
+            'percent_discount' => null,
+            'base' => 'price_sale',
+            'active' => true,
+        ];
+        $this->resetErrorBag();
+    }
+
+
+
+
+
+    // En tu clase Livewire
+    public function startEditxx($id)
+    {
+        $item = PriceListItem::findOrFail($id); // Ajusta al nombre de tu modelo
+
+        // Volcamos los datos al array que usa el formulario
+        $this->new = $item->toArray();
+
+        // Si usas fechas, a veces hay que formatearlas para el input type="date"
+        $this->new['date_start'] = $item->date_start ? $item->date_start->format('Y-m-d') : null;
+        $this->new['date_end'] = $item->date_end ? $item->date_end->format('Y-m-d') : null;
+    }
+
+    public function startEdit(int $id)
+    {
+        // 1. Limpiar errores previos de validación
+        $this->resetErrorBag();
+
+        // 2. Buscar el item asegurando que pertenezca a esta lista de precios
+        $item = PricelistItem::where('pricelist_id', $this->pricelist->id)->findOrFail($id);
+
+        // 3. Volcar los datos al array $new que usa el formulario de arriba
+        $this->new = $item->toArray();
+
+        // 4. Formatear fechas para que los inputs tipo 'date' las reconozcan
+        if ($item->date_start) {
+            $this->new['date_start'] = \Carbon\Carbon::parse($item->date_start)->format('Y-m-d');
+        }
+        if ($item->date_end) {
+            $this->new['date_end'] = \Carbon\Carbon::parse($item->date_end)->format('Y-m-d');
+        }
     }
 }

@@ -187,6 +187,22 @@
                 });
             });
 
+            Livewire.on('notifydBackd', (payload) => {
+                // Esta línea es el truco: si viene en array [0], lo extrae, si no, usa el objeto
+                const data = Array.isArray(payload) ? payload[0] : payload;
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: data.icon || 'success',
+                    title: data.title || 'Aviso',
+                    text: data.text || '',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            });
+
 
             //inicia eliminar
             /* window.confirmDeletesimple = function(id, eventName = 'deleteSingle', message =

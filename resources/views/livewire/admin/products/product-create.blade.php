@@ -79,13 +79,7 @@
                     <i class="fa-solid fa-layer-group mr-2"></i> Suscripciones
                 </button>
 
-                 <button type="button" wire:click="setTab('images')"
-                    class="px-4 py-2 rounded-t-xl text-sm font-semibold transition
-                        {{ $tab === 'images'
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                    <i class="fa-solid fa-layer-group mr-2"></i> Imágenes
-                </button>
+
             </div>
         </div>
 
@@ -411,18 +405,8 @@
 
                     {{-- 5) FILA 3: Marca, Modelo, Rastrear inventario, Cantidad a la mano --}}
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
-
-                        {{-- Marca --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Marca</label>
-                            {{--  <select wire:model.defer="brand_id"
-                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                <option value="">-- Seleccionar --</option>
-                                @foreach ($brands as $b)
-                                    <option value="{{ $b->id }}">{{ $b->name }}</option>
-                                @endforeach
-                            </select> --}}
 
                             <select wire:model.live="brand_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
@@ -440,14 +424,6 @@
                         {{-- Modelo --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Modelo</label>
-                            {{-- <select wire:model.defer="model_id"
-                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                <option value="">-- Seleccionar --</option>
-                                @foreach ($models as $m)
-                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                @endforeach
-                            </select> --}}
                             <select wire:model.defer="modello_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
                                  bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
@@ -471,17 +447,7 @@
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Rastrear
                                 inventario</label>
-                            {{-- <select wire:model.defer="model_id"
-                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                <option value="">-- Seleccionar --</option>
-                                <option value="">-- Por Cantidad --</option>
-                                <option value="">-- Por Serie --</option>
-                                <option value="">-- Por Lote --</option>
-                                @foreach ($models as $m)
-                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                @endforeach
-                            </select> --}}
+
                             <select wire:model.defer="tracking"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
@@ -490,20 +456,22 @@
                                 <option value="serial">Por serie</option>
                                 <option value="lot">Por lote</option>
                             </select>
-                            {{-- @error('model_id')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror --}}
+
                         </div>
 
-                        {{-- Cantidad a la mano --}}
+                        {{-- temporada --}}
                         <div>
-                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Cantidad a la
-                                mano</label>
-                            <input wire:model.defer="qty_on_hand" type="number" step="0.01" min="0"
-                                placeholder="0" {{-- @disabled(!$track_inventory) --}}
+                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Temporada</label>
+
+                            <select wire:model.live="season_id"
                                 class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                       bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 disabled:opacity-50">
-                            @error('qty_on_hand')
+                                 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                <option value="">-- Seleccionar --</option>
+                                @foreach ($seasonOptions as $season)
+                                    <option value="{{ $season['id'] }}">{{ $season['name'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('season_id')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -551,8 +519,8 @@
                     <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div
                             class="inline-flex items-center gap-2 px-3 py-2 rounded-xl
-                bg-indigo-50 text-indigo-700 border border-indigo-100
-                dark:bg-indigo-950/40 dark:text-indigo-200 dark:border-indigo-900/40">
+                             bg-indigo-50 text-indigo-700 border border-indigo-100
+                             dark:bg-indigo-950/40 dark:text-indigo-200 dark:border-indigo-900/40">
                             <i class="fa-solid fa-cubes-stacked"></i>
                             <span class="font-semibold">
                                 Se crearán {{ $variants_count }} variante{{ $variants_count === 1 ? '' : 's' }}
@@ -582,7 +550,7 @@
                             <div class="mt-6 flex justify-end">
                                 <button type="button" wire:click="addAttributeLine"
                                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
-               bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition">
+                                     bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition">
                                     <i class="fa-solid fa-plus"></i> Agregar atributo
                                 </button>
                             </div>
@@ -768,6 +736,339 @@
                     </div>
                 </div>
             @endif
+
+
+
+            @if ($tab === 'precios')
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium">Listas de precios</h3>
+                        <button type="button" wire:click="openPriceRuleModal"
+                            class="text-indigo-600 hover:underline text-sm font-semibold">
+                            + Agregar un precio
+                        </button>
+                    </div>
+
+                    <div class="border rounded-lg overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Lista
+                                        de precios</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        Cantidad mínima</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Precio
+                                    </th>
+                                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase w-10">
+                                        <i class="fa-solid fa-cog"></i>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse ($this->productPriceRules as $index => $rule)
+                                    <tr wire:key="price-rule-{{ $index }}" class="hover:bg-gray-50">
+                                        <td class="px-4 py-2 text-sm text-gray-700">
+                                            {{ is_array($rule['pricelist']) ? $rule['pricelist']['name'] : $rule['pricelist']->name }}
+                                        </td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">
+                                            {{ number_format($rule['min_qty'], 0) }}
+                                        </td>
+                                        <td class="px-4 py-2 text-sm font-bold text-gray-900">
+                                            @if ($rule['compute_method'] === 'fixed')
+                                                {{ number_format($rule['fixed_price'], 2) }}
+                                            @else
+                                                {{ $rule['percent_discount'] }}% Descuento
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-2 text-center">
+                                            {{-- El botón de eliminar --}}
+                                            <button type="button"
+                                                wire:click="removePriceRule({{ $index }}, {{ $rule['id'] ?? 'null' }})"
+                                                wire:confirm="¿Estás seguro de eliminar esta regla de precio?"
+                                                class="text-gray-400 hover:text-red-600 transition-colors">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    {{-- ... tu tr de tabla vacía ... --}}
+                                @endforelse
+                            </tbody>
+                        </table>
+
+
+                    </div>
+                </div>
+
+                {{-- Aquí incluyes el Modal que te envié antes --}}
+
+                @if ($showPriceModal)
+                    <div class="fixed inset-0 z-[100] overflow-y-auto">
+                        <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
+
+                        <div class="flex min-h-full items-center justify-center p-4">
+                            <div
+                                class="relative w-full max-w-2xl transform rounded-lg bg-white shadow-2xl transition-all">
+
+                                <div class="flex items-center justify-between border-b px-4 py-3">
+                                    <h3 class="text-lg font-semibold text-gray-900">Crear Reglas de lista de precios
+                                    </h3>
+                                    <button wire:click="$set('showPriceModal', false)"
+                                        class="text-gray-400 hover:text-gray-600">
+                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div class="p-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Producto</label>
+                                                <input type="text" value="{{ $name }}" disabled
+                                                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 text-sm shadow-sm">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Tipo de
+                                                    precio</label>
+                                                <div class="mt-2 space-x-4">
+                                                    <label class="inline-flex items-center">
+                                                        <input type="radio"
+                                                            wire:model.live="modalRule.compute_method"
+                                                            value="discount"
+                                                            class="text-indigo-600 focus:ring-indigo-500">
+                                                        <span class="ml-2 text-sm">Descuento</span>
+                                                    </label>
+                                                    <label class="inline-flex items-center">
+                                                        <input type="radio"
+                                                            wire:model.live="modalRule.compute_method" value="fixed"
+                                                            class="text-indigo-600 focus:ring-indigo-500">
+                                                        <span class="ml-2 text-sm">Precio fijo</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @if ($modalRule['compute_method'] === 'fixed')
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Precio
+                                                        fijo</label>
+                                                    <div class="mt-1 flex rounded-md shadow-sm">
+                                                        <input type="number" step="0.01"
+                                                            wire:model="modalRule.fixed_price"
+                                                            class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                        <span
+                                                            class="inline-flex items-center px-3 text-gray-500 sm:text-sm">por
+                                                            Unidades</span>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Descuento
+                                                        (%)</label>
+                                                    <input type="number" step="0.01"
+                                                        wire:model="modalRule.percent_discount"
+                                                        class="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Cantidad
+                                                    mínima</label>
+                                                <input type="number" wire:model="modalRule.min_qty"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Lista de
+                                                    precios</label>
+                                                <select wire:model="modalRule.pricelist_id"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                    <option value="">Seleccionar...</option>
+                                                    @foreach ($allPricelists as $pl)
+                                                        <option value="{{ $pl['id'] }}">{{ $pl['name'] }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <div class="rounded-md bg-blue-50 p-3">
+                                                <p class="text-xs text-blue-700">
+                                                    Por fórmula o precio fijo, el precio original no se muestra en
+                                                    órdenes de ventas.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="flex items-center justify-start space-x-2 border-t px-4 py-3 bg-gray-50 rounded-b-lg">
+                                    <button wire:click="savePriceRule"
+                                        class="rounded-md bg-purple-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-700">
+                                        Guardar y cerrar
+                                    </button>
+                                    <button wire:click="$set('showPriceModal', false)"
+                                        class="rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                        Descartar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+
+
+
+            @endif
+
+
+
+
+            @if ($tab === 'pdv')
+                <div class="mt-4">
+                    <label class="inline-flex items-center gap-2">
+                        <input type="checkbox" wire:model.live="pos_ok" class="rounded border-gray-300">
+                        <span class="font-medium">Disponible en Punto de Venta</span>
+                    </label>
+                </div>
+
+                @if ($pos_ok)
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <h3 class="text-sm font-semibold text-slate-800">Categorías POS</h3>
+                        <p class="mt-1 text-xs text-slate-500">
+                            Busca y selecciona una o varias categorías para el punto de venta.
+                        </p>
+
+                        {{-- Seleccionadas --}}
+                        @if (count($this->selectedPosCategoryItems))
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @foreach ($this->selectedPosCategoryItems as $item)
+                                    <span
+                                        class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                                        {{ $item['complete_name'] }}
+                                        <button type="button" wire:click="removePosCategory({{ $item['id'] }})"
+                                            class="text-blue-500 hover:text-blue-700">
+                                            ×
+                                        </button>
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Buscador --}}
+                        <div class="mt-4">
+                            <input type="text" wire:model.live.debounce.250ms="posCategorySearch"
+                                placeholder="Buscar categoría POS..."
+                                class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+
+                        {{-- Resultados --}}
+                        <div class="mt-3 max-h-64 overflow-y-auto rounded-xl border border-slate-200">
+                            @forelse($filteredPosCategories as $item)
+                                <button type="button" wire:click="addPosCategory({{ $item['id'] }})"
+                                    class="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-slate-50">
+                                    <span class="text-slate-700">{{ $item['label'] }}</span>
+                                    <span class="text-xs text-slate-400">Agregar</span>
+                                </button>
+                            @empty
+                                <div class="px-3 py-3 text-sm text-slate-500">
+                                    No se encontraron categorías.
+                                </div>
+                            @endforelse
+                        </div>
+
+                        @error('pos_category_ids')
+                            <div class="mt-2 text-xs text-red-500">{{ $message }}</div>
+                        @enderror
+
+
+
+                        @if ($this->canCreatePosCategory)
+                            <div class="mt-3">
+                                <button type="button" wire:click="createPosCategory"
+                                    class="inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100">
+                                    + Crear categoría POS "{{ $posCategorySearch }}"
+                                </button>
+                            </div>
+                        @endif
+
+                        @error('posCategorySearch')
+                            <div class="mt-2 text-xs text-red-500">{{ $message }}</div>
+                        @enderror
+
+
+
+
+
+                    </div>
+                @endif
+
+                @if ($pos_ok)
+                    <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <h3 class="text-sm font-semibold text-slate-800">Productos adicionales</h3>
+                        <p class="mt-1 text-xs text-slate-500">
+                            Busca productos para ofrecer como adicionales o sugerencias.
+                        </p>
+
+                        {{-- Seleccionados --}}
+                        @if (count($this->selectedAdditionalProductItems))
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @foreach ($this->selectedAdditionalProductItems as $item)
+                                    <span
+                                        class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                                        {{ $item['name'] }}
+                                        <button type="button"
+                                            wire:click="removeAdditionalProduct({{ $item['id'] }})"
+                                            class="text-emerald-500 hover:text-emerald-700">
+                                            ×
+                                        </button>
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Buscador --}}
+                        <div class="mt-4">
+                            <input type="text" wire:model.live.debounce.250ms="additionalProductSearch"
+                                placeholder="Buscar producto adicional..."
+                                class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+
+                        {{-- Resultados --}}
+                        <div class="mt-3 max-h-64 overflow-y-auto rounded-xl border border-slate-200">
+                            @forelse($filteredAdditionalProducts as $item)
+                                <button type="button" wire:click="addAdditionalProduct({{ $item['id'] }})"
+                                    class="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-slate-50">
+                                    <span class="text-slate-700">{{ $item['name'] }}</span>
+                                    <span class="text-xs text-slate-400">Agregar</span>
+                                </button>
+                            @empty
+                                <div class="px-3 py-3 text-sm text-slate-500">
+                                    No se encontraron productos.
+                                </div>
+                            @endforelse
+                        </div>
+
+                        @error('additional_product_ids')
+                            <div class="mt-2 text-xs text-red-500">{{ $message }}</div>
+                        @enderror
+                    </div>
+                @endif
+
+
+            @endif
+
+
+
+
 
             @php
                 $controlBase = "w-full h-12 px-4 rounded-xl border border-gray-300 dark:border-gray-600

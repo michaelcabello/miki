@@ -245,49 +245,49 @@ class CompanyEdit extends Component
 
 
 
-/**
- * Obtiene la carpeta raíz fija de la empresa en AWS/S3.
- *
- * IMPORTANTE:
- * - Esta carpeta NO debe depender de la razón social visible.
- * - La razón social puede cambiar en el sistema, pero la carpeta en S3 debe mantenerse estable.
- * - Por eso usamos el campo `razonsocialaws` como identificador persistente.
- * - Si aún no existe, se genera una sola vez con el formato: company-{id}.
- *
- * Ejemplos:
- * - company-1
- * - company-25
- *
- * Allí se almacenan recursos de la empresa como:
- * - logos
- * - certificados
- * - documentos electrónicos
- * - otros archivos privados o públicos
- */
-protected function getTenantAwsFolder(): string
-{
-    // Carpeta persistente ya guardada en BD
-    $folder = $this->company->razonsocialaws;
+    /**
+     * Obtiene la carpeta raíz fija de la empresa en AWS/S3.
+     *
+     * IMPORTANTE:
+     * - Esta carpeta NO debe depender de la razón social visible.
+     * - La razón social puede cambiar en el sistema, pero la carpeta en S3 debe mantenerse estable.
+     * - Por eso usamos el campo `razonsocialaws` como identificador persistente.
+     * - Si aún no existe, se genera una sola vez con el formato: company-{id}.
+     *
+     * Ejemplos:
+     * - company-1
+     * - company-25
+     *
+     * Allí se almacenan recursos de la empresa como:
+     * - logos
+     * - certificados
+     * - documentos electrónicos
+     * - otros archivos privados o públicos
+     */
+    protected function getTenantAwsFolder(): string
+    {
+        // Carpeta persistente ya guardada en BD
+        $folder = $this->company->razonsocialaws;
 
-    // Si todavía no existe, se crea usando el ID de la empresa.
-    // El ID es estable y no cambia aunque cambie la razón social.
-    if (blank($folder)) {
-        $folder = 'company-' . $this->company->id;
+        // Si todavía no existe, se crea usando el ID de la empresa.
+        // El ID es estable y no cambia aunque cambie la razón social.
+        if (blank($folder)) {
+            $folder = 'company-' . $this->company->id;
+        }
+
+        return $folder;
     }
 
-    return $folder;
-}
+    public function save(): void
+    {
+        // Validar todos los campos del formulario antes de procesar archivos o guardar cambios
+        $this->validate();
 
-public function save(): void
-{
-    // Validar todos los campos del formulario antes de procesar archivos o guardar cambios
-    $this->validate();
+        // Obtener la carpeta raíz fija de la empresa en AWS/S3
+        // Esta carpeta se reutiliza siempre para no romper rutas antiguas
+        $razonSocialAwsFinal = $this->getTenantAwsFolder();
 
-    // Obtener la carpeta raíz fija de la empresa en AWS/S3
-    // Esta carpeta se reutiliza siempre para no romper rutas antiguas
-    $razonSocialAwsFinal = $this->getTenantAwsFolder();
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | LOGO
     |--------------------------------------------------------------------------
@@ -300,23 +300,23 @@ public function save(): void
     | archivos huérfanos y mantener limpio el bucket.
     |
     */
-    if ($this->new_logo) {
-        if (!empty($this->company->logo)) {
-            try {
-                if (Storage::disk('s3_public')->exists($this->company->logo)) {
-                    Storage::disk('s3_public')->delete($this->company->logo);
+        if ($this->new_logo) {
+            if (!empty($this->company->logo)) {
+                try {
+                    if (Storage::disk('s3_public')->exists($this->company->logo)) {
+                        Storage::disk('s3_public')->delete($this->company->logo);
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla la eliminación del archivo anterior, no detenemos el proceso.
+                    // El objetivo principal es permitir que el nuevo logo sí se guarde.
                 }
-            } catch (\Throwable $e) {
-                // Si falla la eliminación del archivo anterior, no detenemos el proceso.
-                // El objetivo principal es permitir que el nuevo logo sí se guarde.
             }
+
+            // Guardar el nuevo logo en la carpeta pública fija de la empresa
+            $this->logo = $this->new_logo->store($razonSocialAwsFinal . '/logos', 's3_public');
         }
 
-        // Guardar el nuevo logo en la carpeta pública fija de la empresa
-        $this->logo = $this->new_logo->store($razonSocialAwsFinal . '/logos', 's3_public');
-    }
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | CERTIFICADO PEM (S3 PRIVADO)
     |--------------------------------------------------------------------------
@@ -328,71 +328,71 @@ public function save(): void
     | company-{id}/certificates/certificate_YYYYmmdd_His.pem
     |
     */
-    if ($this->new_certificate) {
+        if ($this->new_certificate) {
 
-        // 1) Validar extensión real del archivo subido
-        $originalName = $this->new_certificate->getClientOriginalName();
-        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+            // 1) Validar extensión real del archivo subido
+            $originalName = $this->new_certificate->getClientOriginalName();
+            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-        if ($extension !== 'pem') {
-            $this->addError('new_certificate', 'El certificado debe estar en formato PEM.');
-            return;
-        }
-
-        // 2) Validar tamaño máximo permitido (2MB)
-        $maxBytes = 2 * 1024 * 1024;
-        if ($this->new_certificate->getSize() > $maxBytes) {
-            $this->addError('new_certificate', 'El archivo PEM es demasiado grande (máx. 2 MB).');
-            return;
-        }
-
-        // 3) Leer contenido del archivo PEM para validar que tenga:
-        //    - CERTIFICATE
-        //    - PRIVATE KEY
-        // Esto es importante porque el archivo servirá para firmar comprobantes electrónicos.
-        $pem = file_get_contents($this->new_certificate->getRealPath());
-
-        $hasCert = preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem);
-        $hasKey  = preg_match('/-----BEGIN (?:RSA |EC |ENCRYPTED )?PRIVATE KEY-----.*?-----END (?:RSA |EC |ENCRYPTED )?PRIVATE KEY-----/s', $pem);
-
-        if (!$hasCert || !$hasKey) {
-            $this->addError(
-                'new_certificate',
-                'El archivo PEM debe contener CERTIFICATE y PRIVATE KEY.'
-            );
-            return;
-        }
-
-        // 4) Si ya existe un certificado anterior, intentamos eliminarlo del S3 privado
-        // para no dejar archivos viejos sin uso.
-        if (!empty($this->company->certificate_path)) {
-            try {
-                if (Storage::disk('s3_private')->exists($this->company->certificate_path)) {
-                    Storage::disk('s3_private')->delete($this->company->certificate_path);
-                }
-            } catch (\Throwable $e) {
-                // Si falla la eliminación del certificado anterior, no detenemos el guardado.
-                // Lo importante es permitir guardar el nuevo certificado válido.
+            if ($extension !== 'pem') {
+                $this->addError('new_certificate', 'El certificado debe estar en formato PEM.');
+                return;
             }
+
+            // 2) Validar tamaño máximo permitido (2MB)
+            $maxBytes = 2 * 1024 * 1024;
+            if ($this->new_certificate->getSize() > $maxBytes) {
+                $this->addError('new_certificate', 'El archivo PEM es demasiado grande (máx. 2 MB).');
+                return;
+            }
+
+            // 3) Leer contenido del archivo PEM para validar que tenga:
+            //    - CERTIFICATE
+            //    - PRIVATE KEY
+            // Esto es importante porque el archivo servirá para firmar comprobantes electrónicos.
+            $pem = file_get_contents($this->new_certificate->getRealPath());
+
+            $hasCert = preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem);
+            $hasKey  = preg_match('/-----BEGIN (?:RSA |EC |ENCRYPTED )?PRIVATE KEY-----.*?-----END (?:RSA |EC |ENCRYPTED )?PRIVATE KEY-----/s', $pem);
+
+            if (!$hasCert || !$hasKey) {
+                $this->addError(
+                    'new_certificate',
+                    'El archivo PEM debe contener CERTIFICATE y PRIVATE KEY.'
+                );
+                return;
+            }
+
+            // 4) Si ya existe un certificado anterior, intentamos eliminarlo del S3 privado
+            // para no dejar archivos viejos sin uso.
+            if (!empty($this->company->certificate_path)) {
+                try {
+                    if (Storage::disk('s3_private')->exists($this->company->certificate_path)) {
+                        Storage::disk('s3_private')->delete($this->company->certificate_path);
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla la eliminación del certificado anterior, no detenemos el guardado.
+                    // Lo importante es permitir guardar el nuevo certificado válido.
+                }
+            }
+
+            // 5) Definir carpeta y nombre del nuevo certificado
+            $folder = $razonSocialAwsFinal . '/certificates';
+            $newName = 'certificate_' . now()->format('Ymd_His') . '.pem';
+
+            // 6) Guardar el nuevo certificado en S3 privado
+            $path = Storage::disk('s3_private')->putFileAs(
+                $folder,
+                $this->new_certificate,
+                $newName,
+                ['visibility' => 'private']
+            );
+
+            // Guardar la ruta final del certificado en la propiedad para luego persistirla en BD
+            $this->certificate_path = $path;
         }
 
-        // 5) Definir carpeta y nombre del nuevo certificado
-        $folder = $razonSocialAwsFinal . '/certificates';
-        $newName = 'certificate_' . now()->format('Ymd_His') . '.pem';
-
-        // 6) Guardar el nuevo certificado en S3 privado
-        $path = Storage::disk('s3_private')->putFileAs(
-            $folder,
-            $this->new_certificate,
-            $newName,
-            ['visibility' => 'private']
-        );
-
-        // Guardar la ruta final del certificado en la propiedad para luego persistirla en BD
-        $this->certificate_path = $path;
-    }
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | ACTUALIZAR EMPRESA
     |--------------------------------------------------------------------------
@@ -406,65 +406,61 @@ public function save(): void
     |   o documentos ya almacenados.
     |
     */
-    $this->company->update([
-        'ruc' => $this->ruc,
-        'razonsocial' => $this->razonsocial,
-        'razonsocialaws' => $razonSocialAwsFinal, // carpeta raíz fija y persistente en AWS
-        'nombrecomercial' => $this->nombrecomercial,
+        $this->company->update([
+            'ruc' => $this->ruc,
+            'razonsocial' => $this->razonsocial,
+            'razonsocialaws' => $razonSocialAwsFinal, // carpeta raíz fija y persistente en AWS
+            'nombrecomercial' => $this->nombrecomercial,
 
-        'direccion' => $this->direccion,
-        'celular' => $this->celular,
-        'telefono' => $this->telefono,
+            'direccion' => $this->direccion,
+            'celular' => $this->celular,
+            'telefono' => $this->telefono,
 
-        'correo' => $this->correo,
-        'smtp' => $this->smtp,
-        'password' => $this->password,
-        'puerto' => $this->puerto,
+            'correo' => $this->correo,
+            'smtp' => $this->smtp,
+            'password' => $this->password,
+            'puerto' => $this->puerto,
 
-        'department_id' => $this->department_id,
-        'province_id' => $this->province_id,
-        'district_id' => $this->district_id,
-        'ubigeo' => $this->ubigeo,
+            'department_id' => $this->department_id,
+            'province_id' => $this->province_id,
+            'district_id' => $this->district_id,
+            'ubigeo' => $this->ubigeo,
 
-        'logo' => $this->logo,
+            'logo' => $this->logo,
 
-        'soluser' => $this->soluser,
-        'solpass' => $this->solpass,
-        'certificado' => $this->certificado,
-        'certificate_path' => $this->certificate_path,
-        'fechainiciocertificado' => $this->fechainiciocertificado ?: null,
-        'fechafincertificado' => $this->fechafincertificado ?: null,
-        'cliente_id' => $this->cliente_id,
-        'cliente_secret' => $this->cliente_secret,
+            'soluser' => $this->soluser,
+            'solpass' => $this->solpass,
+            'certificado' => $this->certificado,
+            'certificate_path' => $this->certificate_path,
+            'fechainiciocertificado' => $this->fechainiciocertificado ?: null,
+            'fechafincertificado' => $this->fechafincertificado ?: null,
+            'cliente_id' => $this->cliente_id,
+            'cliente_secret' => $this->cliente_secret,
 
-        'production' => $this->production,
-        'state' => $this->state,
-        'ublversion' => $this->ublversion,
-        'detraccion' => $this->detraccion ?: null,
-        'pago' => $this->pago,
-        'currency_id' => $this->currency_id ?: null,
-    ]);
+            'production' => $this->production,
+            'state' => $this->state,
+            'ublversion' => $this->ublversion,
+            'detraccion' => $this->detraccion ?: null,
+            'pago' => $this->pago,
+            'currency_id' => $this->currency_id ?: null,
+        ]);
 
-    // Limpiar archivos temporales de Livewire después de guardar
-    $this->new_certificate = null;
-    $this->new_logo = null;
+        // Limpiar archivos temporales de Livewire después de guardar
+        $this->new_certificate = null;
+        $this->new_logo = null;
 
-    // Recargar modelo y propiedades para reflejar datos actualizados en pantalla
-    $this->company->refresh();
-    $this->fillFromModel();
+        // Recargar modelo y propiedades para reflejar datos actualizados en pantalla
+        $this->company->refresh();
+        $this->fillFromModel();
 
-    // Notificación de éxito
-    $this->dispatch(
-        'notifyd',
-        title: 'TICOM',
-        text: 'La información de la empresa fue actualizada correctamente.',
-        icon: 'success'
-    );
-}
-
-
-
-
+        // Notificación de éxito
+        $this->dispatch(
+            'notifyd',
+            title: 'TICOM',
+            text: 'La información de la empresa fue actualizada correctamente.',
+            icon: 'success'
+        );
+    }
 
 
 

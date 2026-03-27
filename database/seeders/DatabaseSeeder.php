@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
          $this->call(DocumentTypesTableSeeder::class);
 
         $this->call([
+            PosCategorySeeder::class,
+            SeasonSeeder::class,
             SubscriptionPlanSeeder::class,
             CurrencySeeder::class,
             DepartmentSeeder::class,
@@ -48,6 +50,7 @@ class DatabaseSeeder extends Seeder
             //AccountSeeder::class,
             AccountSeederdos::class,
             // TenantsTableSeeder::class,
+
         ]);
 
 

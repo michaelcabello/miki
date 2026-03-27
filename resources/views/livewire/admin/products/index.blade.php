@@ -201,7 +201,7 @@
                                         class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100">Ver</span>
                                 </a>
                                 <!-- Editar -->
-                                <a {{-- href="{{ route('admin.users.edit', $product_template) }}" --}}
+                                <a href="{{ route('admin.products.edit', $product_template) }}"
                                     class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-green-600 transition">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                     <span

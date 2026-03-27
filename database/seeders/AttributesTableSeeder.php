@@ -14,21 +14,21 @@ class AttributesTableSeeder extends Seeder
      */
     public function run()
     {
-        
+
 
         \DB::table('attributes')->delete();
-        
+
         \DB::table('attributes')->insert(array (
-            0 => 
+            0 =>
             array (
                 'id' => 1,
                 'name' => 'Tallas',
-                'state' => 0,
+                'state' => 1,
                 'order' => 1,
                 'created_at' => '2026-02-07 23:40:23',
                 'updated_at' => '2026-02-07 23:40:23',
             ),
-            1 => 
+            1 =>
             array (
                 'id' => 2,
                 'name' => 'Colores',
@@ -37,7 +37,7 @@ class AttributesTableSeeder extends Seeder
                 'created_at' => '2026-02-07 23:40:38',
                 'updated_at' => '2026-02-07 23:40:38',
             ),
-            2 => 
+            2 =>
             array (
                 'id' => 3,
                 'name' => 'Volumen',
@@ -47,7 +47,7 @@ class AttributesTableSeeder extends Seeder
                 'updated_at' => '2026-02-07 23:40:55',
             ),
         ));
-        
-        
+
+
     }
 }

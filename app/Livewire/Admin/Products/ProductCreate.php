@@ -17,15 +17,24 @@ use App\Models\Tax;
 use App\Models\Detraction;
 use App\Models\Brand;
 use App\Models\Modello;
+use App\Models\Season;
 use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+
+use App\Models\PosCategory;
+use App\Models\PricelistItem;
+use App\Models\Pricelist;
 
 //php artisan make:livewire Admin/Products/ProductCreate
 class ProductCreate extends Component
 {
 
     // En tu componente Livewire (ProductTemplateForm.php o similar)
+    // 1. Asegúrate de tener estas propiedades declaradas arriba
+    public ?int $product_id = null; // ID si estamos editando
+    public array $temporary_prices = []; // Para guardar precios antes de crear el producto
+    public array $allPricelists = []; // Para el select del modal
 
     public $is_subscription = false; // Solo para controlar la UI (frontend)
 
@@ -34,6 +43,23 @@ class ProductCreate extends Component
     public $recurring_price;
     public $start_date;
     public $status = 'active';
+
+    public string $newPosCategoryName = '';
+
+    public string $posCategorySearch = '';
+    public array $filteredPosCategories = [];
+    public array $selectedPosCategories = []; // opcional para vista, además de pos_category_ids
+
+    public string $additionalProductSearch = '';
+    public array $filteredAdditionalProducts = [];
+    public array $selectedAdditionalProducts = []; // opcional para vista
+
+
+    public array $posCategoryOptions = [];
+    public array $pos_category_ids = [];
+
+    public array $additionalProductOptions = [];
+    public array $additional_product_ids = [];
 
 
 
@@ -58,6 +84,7 @@ class ProductCreate extends Component
     public array $detractionOptions = [];
     public array $brandOptions = [];
     public array $modelloOptions = [];
+    public array $seasonOptions = [];
 
     public array $attributeLines = []; // líneas estilo Odoo
     public $catalogAttributes = [];
@@ -113,6 +140,17 @@ class ProductCreate extends Component
     public bool $sellTouched = false;
     public bool $buyTouched = false;
 
+    public $showPriceModal = false;
+    public $modalRule = [
+        'pricelist_id' => '',
+        'compute_method' => 'fixed',
+        'fixed_price' => 0,
+        'percent_discount' => 0,
+        'min_qty' => 0,
+        'date_start' => '',
+        'date_end' => '',
+    ];
+
 
     public function mount(): void
     {
@@ -147,6 +185,16 @@ class ProductCreate extends Component
             ->get(['id', 'code', 'name', 'rate'])
             ->map(fn($d) => $d->toArray())
             ->all();
+
+        // seasons
+        $this->seasonOptions = Season::query()
+            ->where('active', true)
+            ->orderBy('order')
+            ->get(['id', 'order', 'name'])
+            ->map(fn($d) => $d->toArray())
+            ->all();
+
+
 
         // Brands
         $this->brandOptions = Brand::query()
@@ -214,6 +262,51 @@ class ProductCreate extends Component
 
         // Set inicial según el type actual
         $this->applyAccountDefaultsByType();
+
+        $this->posCategoryOptions = PosCategory::query()
+            ->where('state', true)
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn($c) => $c->toArray())
+            ->all();
+
+        $this->additionalProductOptions = ProductTemplate::query()
+            ->where('active', true)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn($p) => $p->toArray())
+            ->all();
+
+
+        $tree = \App\Models\PosCategory::query()
+            ->whereNull('parent_id')
+            ->where('state', true)
+            ->with('childrenRecursive')
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get();
+
+        $this->posCategoryOptions = $this->flattenPosCategories($tree);
+
+        $this->refreshFilteredPosCategories();
+
+        $this->additionalProductOptions = \App\Models\ProductTemplate::query()
+            ->where('active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug'])
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+            ])->all();
+
+        $this->refreshFilteredAdditionalProducts();
+
+        //carga las listas de precios disponibles
+        $this->allPricelists = \App\Models\Pricelist::where('state', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'currency_id'])
+            ->toArray();
     }
 
     // Para mostrar los planes en el select
@@ -486,8 +579,6 @@ class ProductCreate extends Component
     public function render()
     {
 
-
-
         $attributes = Attribute::where('state', true)
             ->with(['values' => function ($q) {
                 $q->where('active', true)->orderByRaw('COALESCE(sort_order, 999999) asc')->orderBy('name');
@@ -534,6 +625,17 @@ class ProductCreate extends Component
             'sale_ok' => ['boolean'],
             'purchase_ok' => ['boolean'],
             'pos_ok' => ['boolean'],
+
+            'pos_category_ids' => [
+                Rule::requiredIf($this->pos_ok),
+                'array'
+            ],
+            'pos_category_ids.*' => ['integer', 'exists:pos_categories,id'],
+
+            'additional_product_ids' => ['array'],
+            'additional_product_ids.*' => ['integer', 'exists:product_templates,id'],
+
+
             'active' => ['boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
             //'tax_id' => ['nullable', 'exists:taxes,id'],
@@ -637,6 +739,25 @@ class ProductCreate extends Component
             'recurring_price' => $this->is_subscription ? $this->recurring_price : null,
 
         ]);
+
+
+        $template->posCategories()->sync(
+            $this->pos_ok
+                ? collect($this->pos_category_ids)->filter()->map(fn($x) => (int) $x)->values()->all()
+                : []
+        );
+
+        $template->additionalProducts()->sync(
+            $this->pos_ok
+                ? collect($this->additional_product_ids)
+                ->filter(fn($id) => (int) $id !== (int) $template->id)
+                ->mapWithKeys(fn($id) => [
+                    (int) $id => ['sequence' => 10, 'active' => true]
+                ])
+                ->all()
+                : []
+        );
+
 
         // Impuestos (muchos a muchos)
         $template->saleTaxes()->sync(
@@ -743,6 +864,19 @@ class ProductCreate extends Component
             ->with('swal', ['icon' => 'success', 'title' => 'Listo', 'text' => 'Producto creado con variantes']);
     }
 
+
+
+    public function updatedPosOk($value): void
+    {
+        if (! $value) {
+            $this->pos_category_ids = [];
+            $this->additional_product_ids = [];
+        }
+    }
+
+
+
+
     private function getSelectedValuesByAttribute(): array
     {
         $attributeIds = array_keys(array_filter($this->selectedAttributes));
@@ -803,5 +937,383 @@ class ProductCreate extends Component
         }
 
         return $sku;
+    }
+
+    private function flattenPosCategories($categories, int $level = 0): array
+    {
+        $out = [];
+
+        foreach ($categories as $cat) {
+            $out[] = [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'complete_name' => $cat->complete_name ?: $cat->name,
+                'label' => str_repeat('— ', $level) . $cat->name,
+                'level' => $level,
+            ];
+
+            if ($cat->childrenRecursive && $cat->childrenRecursive->count()) {
+                $out = array_merge($out, $this->flattenPosCategories($cat->childrenRecursive, $level + 1));
+            }
+        }
+
+        return $out;
+    }
+
+    public function updatedPosCategorySearch(): void
+    {
+        $this->refreshFilteredPosCategories();
+    }
+
+    private function refreshFilteredPosCategories(): void
+    {
+        $search = trim(mb_strtolower($this->posCategorySearch));
+
+        $items = $this->posCategoryOptions ?? [];
+
+        if ($search === '') {
+            $this->filteredPosCategories = array_values(array_filter($items, function ($item) {
+                return !in_array($item['id'], $this->pos_category_ids);
+            }));
+
+            return;
+        }
+
+        $this->filteredPosCategories = array_values(array_filter($items, function ($item) use ($search) {
+            return !in_array($item['id'], $this->pos_category_ids)
+                && (
+                    str_contains(mb_strtolower($item['name']), $search) ||
+                    str_contains(mb_strtolower($item['complete_name']), $search)
+                );
+        }));
+    }
+
+    public function updatedAdditionalProductSearch(): void
+    {
+        $this->refreshFilteredAdditionalProducts();
+    }
+
+    private function refreshFilteredAdditionalProducts(): void
+    {
+        $search = trim(mb_strtolower($this->additionalProductSearch));
+
+        $items = $this->additionalProductOptions ?? [];
+
+        if ($search === '') {
+            $this->filteredAdditionalProducts = array_values(array_filter($items, function ($item) {
+                return !in_array($item['id'], $this->additional_product_ids);
+            }));
+
+            return;
+        }
+
+        $this->filteredAdditionalProducts = array_values(array_filter($items, function ($item) use ($search) {
+            return !in_array($item['id'], $this->additional_product_ids)
+                && str_contains(mb_strtolower($item['name']), $search);
+        }));
+    }
+
+    public function addPosCategory(int $id): void
+    {
+        if (!in_array($id, $this->pos_category_ids)) {
+            $this->pos_category_ids[] = $id;
+        }
+
+        $this->posCategorySearch = '';
+        $this->refreshFilteredPosCategories();
+    }
+
+    public function removePosCategory(int $id): void
+    {
+        $this->pos_category_ids = array_values(array_filter(
+            $this->pos_category_ids,
+            fn($item) => (int) $item !== $id
+        ));
+
+        $this->refreshFilteredPosCategories();
+    }
+
+
+    public function addAdditionalProduct(int $id): void
+    {
+        if (!in_array($id, $this->additional_product_ids) && (int) $id !== 0) {
+            $this->additional_product_ids[] = $id;
+        }
+
+        $this->additionalProductSearch = '';
+        $this->refreshFilteredAdditionalProducts();
+    }
+
+    public function removeAdditionalProduct(int $id): void
+    {
+        $this->additional_product_ids = array_values(array_filter(
+            $this->additional_product_ids,
+            fn($item) => (int) $item !== $id
+        ));
+
+        $this->refreshFilteredAdditionalProducts();
+    }
+
+    public function getSelectedPosCategoryItemsProperty(): array
+    {
+        $all = collect($this->posCategoryOptions);
+
+        return $all->whereIn('id', $this->pos_category_ids)->values()->all();
+    }
+
+    public function getSelectedAdditionalProductItemsProperty(): array
+    {
+        $all = collect($this->additionalProductOptions);
+
+        return $all->whereIn('id', $this->additional_product_ids)->values()->all();
+    }
+
+    public function getCanCreatePosCategoryProperty(): bool
+    {
+        $name = trim($this->posCategorySearch);
+
+        if ($name === '') {
+            return false;
+        }
+
+        $exists = \App\Models\PosCategory::query()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->exists();
+
+        return ! $exists;
+    }
+
+    public function createPosCategory(): void
+    {
+
+
+        $name = trim($this->posCategorySearch);
+
+        if ($name === '') {
+            return;
+        }
+
+
+        if (mb_strlen($name) < 2) {
+            $this->addError('posCategorySearch', 'La categoría debe tener al menos 2 caracteres.');
+            return;
+        }
+
+        $this->resetErrorBag('posCategorySearch');
+
+
+        $exists = \App\Models\PosCategory::query()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->first();
+
+        if ($exists) {
+            if (!in_array($exists->id, $this->pos_category_ids)) {
+                $this->pos_category_ids[] = $exists->id;
+            }
+
+            $this->posCategorySearch = '';
+            $this->refreshFilteredPosCategories();
+            return;
+        }
+
+        $baseSlug = \Illuminate\Support\Str::slug($name);
+        $slug = $baseSlug;
+        $i = 2;
+
+        while (\App\Models\PosCategory::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
+        }
+
+        $category = \App\Models\PosCategory::create([
+            'name' => $name,
+            'slug' => $slug,
+            'parent_id' => null, // solo primer nivel
+            'complete_name' => $name,
+            'state' => true,
+            'order' => 0,
+            'image' => null,
+        ]);
+
+        // Recargar catálogo completo
+        $tree = \App\Models\PosCategory::query()
+            ->whereNull('parent_id')
+            ->where('state', true)
+            ->with('childrenRecursive')
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get();
+
+        $this->posCategoryOptions = $this->flattenPosCategories($tree);
+
+        // Seleccionarla automáticamente
+        if (!in_array($category->id, $this->pos_category_ids)) {
+            $this->pos_category_ids[] = $category->id;
+        }
+
+        $this->posCategorySearch = '';
+        $this->refreshFilteredPosCategories();
+    }
+
+    //para lista de precios
+    public function getPriceRulePreviewProperty()
+    {
+        $query = \App\Models\PricelistItem::query()
+            ->with([
+                'pricelist:id,name,currency_id',
+                'category:id,name',
+            ])
+            ->where('active', true)
+            ->where(function ($q) {
+                $q->where('applied_on', 'all');
+
+                if ($this->category_id) {
+                    $q->orWhere(function ($sub) {
+                        $sub->where('applied_on', 'category')
+                            ->where('category_id', $this->category_id);
+                    });
+                }
+            })
+            ->orderBy('sequence')
+            ->orderBy('min_qty')
+            ->get();
+
+        return $query->map(function ($item) {
+            return [
+                'pricelist' => $item->pricelist->name ?? '—',
+                'applied_on' => $item->applied_on,
+                'category' => $item->category->name ?? '—',
+                'min_qty' => $item->min_qty,
+                'compute_method' => $item->compute_method,
+                'fixed_price' => $item->fixed_price,
+                'percent_discount' => $item->percent_discount,
+                'base' => $item->base,
+                'price_multiplier' => $item->price_multiplier,
+                'price_surcharge' => $item->price_surcharge,
+                'rounding' => $item->rounding,
+                'date_start' => $item->date_start,
+                'date_end' => $item->date_end,
+            ];
+        })->toArray();
+    }
+
+
+    // Para mostrar las reglas en la tabla
+    public function getProductPriceRulesProperty()
+    {
+        $rules = [];
+
+        // Si el producto ya existe (Edición), traer de la base de datos
+        if ($this->product_id) {
+            $rules = PricelistItem::where('product_template_id', $this->product_id)
+                ->with('pricelist')
+                ->get()
+                ->toArray();
+        }
+
+        // IMPORTANTE: Combinar con los temporales creados en esta sesión
+        // Usamos array_merge para que la tabla muestre ambos
+        return array_merge($rules, $this->temporary_prices);
+    }
+
+
+    public function openPriceRuleModal()
+    {
+        // Limpiamos la regla anterior
+        $this->modalRule = [
+            'pricelist_id' => '',
+            'compute_method' => 'fixed',
+            'fixed_price' => 0,
+            'percent_discount' => 0,
+            'min_qty' => 0,
+            'date_start' => '',
+            'date_end' => '',
+        ];
+        $this->showPriceModal = true;
+    }
+
+
+
+    /*  public function savePriceRule()
+    {
+        $this->validate([
+            'modalRule.pricelist_id' => 'required',
+            'modalRule.compute_method' => 'required',
+        ]);
+
+        PricelistItem::create([
+            'pricelist_id' => $this->modalRule['pricelist_id'],
+            'applied_on' => 'template',
+            'product_template_id' => $this->product_id, // El ID del producto actual
+            'compute_method' => $this->modalRule['compute_method'],
+            'fixed_price' => $this->modalRule['fixed_price'],
+            'percent_discount' => $this->modalRule['percent_discount'],
+            'min_qty' => $this->modalRule['min_qty'] ?? 0,
+            'date_start' => $this->modalRule['date_start'] ?: null,
+            'date_end' => $this->modalRule['date_end'] ?: null,
+        ]);
+
+        $this->showPriceModal = false;
+        $this->dispatch('notify', ['type' => 'success', 'message' => 'Regla de precio agregada']);
+    } */
+
+    public function savePriceRule()
+    {
+        // 1. Validar datos mínimos
+        if (empty($this->modalRule['pricelist_id'])) {
+            // Opcional: enviar una alerta si no seleccionó lista
+            return;
+        }
+
+        // 2. Obtener el nombre de la lista para mostrarlo en la tabla (ya que no hay relación de DB aún)
+        $pricelistName = 'N/A';
+        foreach ($this->allPricelists as $pl) {
+            if ($pl['id'] == $this->modalRule['pricelist_id']) {
+                $pricelistName = $pl['name'];
+                break;
+            }
+        }
+
+        // 3. Crear el set de datos para la tabla
+        $newRule = [
+            'pricelist_id'     => $this->modalRule['pricelist_id'],
+            // Creamos una estructura que imite al modelo para que la vista no falle
+            'pricelist'        => ['name' => $pricelistName],
+            'compute_method'   => $this->modalRule['compute_method'],
+            'fixed_price'      => $this->modalRule['fixed_price'] ?? 0,
+            'percent_discount' => $this->modalRule['percent_discount'] ?? 0,
+            'min_qty'          => $this->modalRule['min_qty'] ?? 0,
+        ];
+
+        // 4. Agregar al array temporal
+        $this->temporary_prices[] = $newRule;
+
+        // 5. Cerrar modal y limpiar
+        $this->showPriceModal = false;
+        $this->reset('modalRule');
+
+        // Opcional: resetear valores por defecto del modal
+        $this->modalRule['compute_method'] = 'fixed';
+    }
+
+
+    public function removePriceRule($index, $ruleId = null)
+    {
+        // 1. Si la regla tiene un ID, significa que ya existe en la base de datos
+        if ($ruleId) {
+            $rule = \App\Models\PricelistItem::find($ruleId);
+            if ($rule) {
+                $rule->delete();
+                $this->dispatch('notify', ['type' => 'success', 'message' => 'Regla eliminada de la base de datos']);
+            }
+        } else {
+            // 2. Si no tiene ID, es una regla temporal (producto nuevo)
+            // La eliminamos del array usando el índice
+            if (isset($this->temporary_prices[$index])) {
+                unset($this->temporary_prices[$index]);
+                // Reindexamos el array para evitar huecos en los índices
+                $this->temporary_prices = array_values($this->temporary_prices);
+                $this->dispatch('notify', ['type' => 'info', 'message' => 'Regla temporal removida']);
+            }
+        }
     }
 }

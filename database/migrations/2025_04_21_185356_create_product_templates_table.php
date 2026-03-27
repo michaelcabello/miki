@@ -54,17 +54,6 @@ return new class extends Migration
                 ->nullOnDelete();
 
 
-            //$table->unsignedBigInteger('sale_tax_id')->nullable();
-            // $table->unsignedBigInteger('purchase_tax_id')->nullable();
-
-            /* $table->foreign('sale_tax_id', 'fk_pt_sale_tax')
-                ->references('id')->on('taxes')
-                ->nullOnDelete();
-
-            $table->foreign('purchase_tax_id', 'fk_pt_purchase_tax')
-                ->references('id')->on('taxes')
-                ->nullOnDelete(); */
-
             /*
     |--------------------------------------------------------------------------
     | Marca y Modelo
@@ -73,6 +62,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('brand_id')->nullable();
             $table->unsignedBigInteger('modello_id')->nullable();
+            $table->unsignedBigInteger('season_id')->nullable();
 
             $table->foreign('brand_id', 'fk_pt_brand')
                 ->references('id')->on('brands')
@@ -80,6 +70,10 @@ return new class extends Migration
 
             $table->foreign('modello_id', 'fk_pt_modello')
                 ->references('id')->on('modellos')
+                ->nullOnDelete();
+
+            $table->foreign('season_id', 'fk_pt_season')
+                ->references('id')->on('seasons')
                 ->nullOnDelete();
 
             $table->unsignedBigInteger('detraction_id')->nullable();
@@ -114,6 +108,7 @@ return new class extends Migration
             //$table->index(['purchase_tax_id'], 'i_pt_ptax');
             $table->index(['brand_id'], 'i_pt_brand');
             $table->index(['modello_id'], 'i_pt_modello');
+            $table->index(['season_id'], 'i_pt_season');
             $table->index(['detraction_id'], 'i_pt_detraction');
 
 

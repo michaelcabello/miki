@@ -15,8 +15,21 @@ class Attribute extends Model
         return $this->hasMany(AttributeValue::class);
     } */
 
+    // Conversión automática de tipos
+    protected $casts = [
+        'state' => 'boolean',
+        'order' => 'integer',
+    ];
+
     public function values()
     {
         return $this->hasMany(AttributeValue::class);
+    }
+
+    public function hasValuesInUse(): bool
+    {
+        return $this->values()
+            ->whereHas('variants')
+            ->exists();
     }
 }

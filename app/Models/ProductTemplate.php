@@ -123,4 +123,37 @@ class ProductTemplate extends Model
             ->where('is_default', true)
             ->withDefault(); // Evita errores si no existe
     }
+
+
+    //agregando relaciones con categorypost y adicional de productos
+
+    public function posCategories()
+    {
+        return $this->belongsToMany(
+            \App\Models\PosCategory::class,
+            'pos_category_product_template'
+        )->withTimestamps();
+    }
+
+    public function additionalProducts()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'product_template_additional_products',
+            'product_template_id',
+            'additional_product_template_id'
+        )->withPivot(['sequence', 'active'])
+            ->withTimestamps();
+    }
+
+    public function parentAdditionalProducts()
+    {
+        return $this->belongsToMany(
+            self::class,
+            'product_template_additional_products',
+            'additional_product_template_id',
+            'product_template_id'
+        )->withPivot(['sequence', 'active'])
+            ->withTimestamps();
+    }
 }

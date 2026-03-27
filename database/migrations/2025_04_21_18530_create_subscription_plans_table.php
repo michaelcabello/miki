@@ -23,7 +23,7 @@ return new class extends Migration
                 ->default('month')
                 ->comment('Unidad de tiempo: día, semana, mes o año');
 
-            $table->boolean('state')
+            $table->boolean('active')
                 ->default(true)
                 ->comment('Indica si el plan puede ser asignado a nuevos productos');
 
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Índice para filtrar planes activos rápidamente
-            $table->index('state');
+            $table->index('active');
         });
     }
 

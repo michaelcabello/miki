@@ -99,7 +99,23 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'Journal ExportPdf', 'display_name' => 'Exportar diarios a PDF', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'Journal ImportExcel', 'display_name' => 'Importar diarios de Excel', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
 
+        Permission::create(['name' => 'Attribute List', 'display_name' => 'Listar atributos', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Attribute View', 'display_name' => 'Ver atributo', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Attribute Create', 'display_name' => 'Crear atributo', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Attribute Update', 'display_name' => 'Actualizar atributo', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Attribute Delete', 'display_name' => 'Eliminar atributo', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Attribute ExportExcel', 'display_name' => 'Exportar atributos a Excel', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Attribute ExportPdf', 'display_name' => 'Exportar atributos a PDF', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Attribute ImportExcel', 'display_name' => 'Importar atributos de Excel', 'model_name' => 'Attribute'])->SyncRoles([$adminRole]);
 
+        Permission::create(['name' => 'SubscriptionPlan List', 'display_name' => 'Listar Planes de Subscripción', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubscriptionPlan View', 'display_name' => 'Ver Planes de Subscripción', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubscriptionPlan Create', 'display_name' => 'Crear Planes de Subscripción', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubscriptionPlan Update', 'display_name' => 'Actualizar Planes de Subscripción', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubscriptionPlan Delete', 'display_name' => 'Eliminar Planes de Subscripción', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubscriptionPlan ExportExcel', 'display_name' => 'Exportar Planes de Subscripciones a Excel', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubscriptionPlan ExportPdf', 'display_name' => 'Exportar Planes de Subscripciones a PDF', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'SubscriptionPlan ImportExcel', 'display_name' => 'Importar Planes de Subscripciones de Excel', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
 
 
         User::find(1)->assignRole($adminRole);

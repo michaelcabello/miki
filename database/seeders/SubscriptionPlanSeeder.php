@@ -18,31 +18,31 @@ class SubscriptionPlanSeeder extends Seeder
                 'name' => 'Mensual estándar',
                 'interval_count' => 1,
                 'interval_unit' => 'month',
-                'state' => true,
+                'active' => true,
             ],
             [
                 'name' => 'Trimestral (Ahorro 5%)',
                 'interval_count' => 3,
                 'interval_unit' => 'month',
-                'state' => true,
+                'active' => true,
             ],
             [
                 'name' => 'Semestral (Ahorro 10%)',
                 'interval_count' => 6,
                 'interval_unit' => 'month',
-                'state' => true,
+                'active' => true,
             ],
             [
                 'name' => 'Anual Premium',
                 'interval_count' => 1,
                 'interval_unit' => 'year',
-                'state' => true,
+                'active' => true,
             ],
             [
                 'name' => 'Mantenimiento Semanal',
                 'interval_count' => 1,
                 'interval_unit' => 'week',
-                'state' => true,
+                'active' => true,
             ],
         ];
 

@@ -65,6 +65,49 @@ class PricelistItem extends Model
         return $this->belongsTo(Category::class);
     }
 
+    // --- LÓGICA DE EDICIÓN ---
 
+    public function startEdit($id)
+    {
+        $item = PricelistItem::findOrFail($id);
 
+        // Cargamos los datos en el array de edición
+        $this->editing[$id] = $item->toArray();
+    }
+
+    public function cancelEdit($id)
+    {
+        unset($this->editing[$id]);
+    }
+
+    public function saveEdit($id)
+    {
+        // 1. Validar
+        $this->validate([
+            "editing.$id.applied_on" => 'required',
+            "editing.$id.compute_method" => 'required',
+            "editing.$id.min_qty" => 'required|numeric|min:0',
+        ]);
+
+        // 2. Buscar y Actualizar
+        $item = PricelistItem::findOrFail($id);
+
+        // Aplicamos limpieza similar a la de addLine
+        $data = $this->editing[$id];
+
+        if ($data['compute_method'] == 'fixed') {
+            $data['percent_discount'] = 0;
+            $data['price_multiplier'] = 1;
+        } elseif ($data['compute_method'] == 'discount') {
+            $data['fixed_price'] = 0;
+            $data['price_multiplier'] = 1;
+        }
+
+        $item->update($data);
+
+        // 3. Limpiar estado de edición
+        unset($this->editing[$id]);
+
+        $this->dispatch('swal', ['title' => 'Regla actualizada', 'icon' => 'success']);
+    }
 }

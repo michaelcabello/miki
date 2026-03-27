@@ -32,7 +32,11 @@ use App\Http\Controllers\Admin\Brand\BrandController;
 use App\Http\Controllers\Admin\Journal\JournalController;
 use App\Http\Controllers\Admin\Journaltype\JournalTypeController;
 use App\Http\Controllers\Admin\Partner\PartnerController;
+use App\Http\Controllers\Admin\SubscriptionPlan\SubscriptionPlanController;
 use App\Livewire\Admin\Accountsetting\AccountSettingEdit;
+use App\Livewire\Admin\Attribute\AttributeCreate;
+use App\Livewire\Admin\Attribute\AttributeEdit;
+use App\Livewire\Admin\Attribute\AttributeList;
 use App\Livewire\Admin\Company\CompanyEdit;
 use App\Livewire\Admin\Journal\JournalCreate;
 use App\Livewire\Admin\Journal\JournalEdit;
@@ -44,7 +48,10 @@ use App\Livewire\Admin\Partner\PartnerCreate;
 use App\Livewire\Admin\Partner\PartnerEdit;
 use App\Livewire\Admin\Pos\PosDemo;
 use App\Livewire\Admin\Products\Images\Index as ProductImagesIndex;
-
+use App\Livewire\Admin\Products\ProductEdit;
+use App\Livewire\Admin\SubscriptionPlan\SubscriptionPlanCreate;
+use App\Livewire\Admin\SubscriptionPlan\SubscriptionPlanEdit;
+use App\Livewire\Admin\SubscriptionPlan\SubscriptionPlanList;
 
 Route::get('/hola', function () {
     return '¡Hola desde el admin!';
@@ -111,12 +118,61 @@ Route::resource('categoryposts', CategorypostController::class)->names('admin.ca
 
 Route::resource('warehouses', WarehouseController::class)->names('admin.warehouses');
 
-Route::resource('attributes', AttributeController::class)->names('admin.attributes');
+//Route::resource('attributes', AttributeController::class)->names('admin.attributes');
+//Route::get('attributes', AttributeList::class)->middleware('permission:Attribute List')->name('admin.attributes.index');
 
-//Route::resource('attributes/{attribute}', AttributevalueController::class)->names('admin.attributevalues');
+
+Route::get('attributes/export/excel', [AttributeController::class, 'exportExcel'])
+    ->middleware('permission:Attribute ExportExcel')
+    ->name('admin.attributes.export.excel');
+
+Route::get('attributes/export/pdf', [AttributeController::class, 'exportPdf'])
+    ->middleware('permission:Attribute ExportPdf')
+    ->name('admin.attributes.export.pdf');
+
+Route::post('attributes/import', [AttributeController::class, 'import'])
+    ->middleware('permission:Attribute ImportExcel')
+    ->name('admin.attributes.import');
+
+// ── CRUD Livewire ─────────────────────────────────────────────
+Route::get('attributes', AttributeList::class)
+    ->middleware('permission:Attribute List')
+    ->name('admin.attributes.index');
+
+Route::get('attributes/create', AttributeCreate::class)
+    ->middleware('permission:Attribute Create')
+    ->name('admin.attributes.create');
+
+Route::get('attributes/{attribute}/edit', AttributeEdit::class)
+    ->middleware('permission:Attribute Update')
+    ->name('admin.attributes.edit');
+
+// ── Valores del atributo (ya existente, mantenemos) ───────────
+Route::get('attributes/{attribute}/values', AttributeValueManager::class)
+    ->name('admin.attributes.values');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Route::get('attributes/{attribute}/values', AttributeValueManager::class)->name('admin.attributes.values');
+
+
+
+
 Route::get('products/create', ProductsProductCreate::class)->name('admin.products.create');
+Route::get('products/{product_template}/edit', ProductEdit::class)->name('admin.products.edit');
+
 
 Route::resource('pricelists', PricelistController::class)->names('admin.pricelists');
 Route::get('pricelist/{pricelist}/items', PricelistItemManager::class)->name('admin.pricelists.items');
@@ -167,3 +223,30 @@ Route::get('journals/{record}/edit',  JournalEdit::class)->name('admin.journals.
 
 
 Route::get('company/edit', CompanyEdit::class)->name('admin.company.edit');
+
+
+// ── SubscriptionPlan: export/import PRIMERO ───────────────────────
+Route::get('subscription-plans/export/excel', [SubscriptionPlanController::class, 'exportExcel'])
+    ->middleware('permission:SubscriptionPlan ExportExcel')
+    ->name('admin.subscription-plans.export.excel');
+
+Route::get('subscription-plans/export/pdf', [SubscriptionPlanController::class, 'exportPdf'])
+    ->middleware('permission:SubscriptionPlan ExportPdf')
+    ->name('admin.subscription-plans.export.pdf');
+
+Route::post('subscription-plans/import', [SubscriptionPlanController::class, 'import'])
+    ->middleware('permission:SubscriptionPlan ImportExcel')
+    ->name('admin.subscription-plans.import');
+
+// ── CRUD Livewire ─────────────────────────────────────────────────
+Route::get('subscription-plans', SubscriptionPlanList::class)
+    ->middleware('permission:SubscriptionPlan List')
+    ->name('admin.subscription-plans.index');
+
+Route::get('subscription-plans/create', SubscriptionPlanCreate::class)
+    ->middleware('permission:SubscriptionPlan Create')
+    ->name('admin.subscription-plans.create');
+
+Route::get('subscription-plans/{plan}/edit', SubscriptionPlanEdit::class)
+    ->middleware('permission:SubscriptionPlan Update')
+    ->name('admin.subscription-plans.edit');
