@@ -9,20 +9,58 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class ProductTemplate extends Model
 {
     protected $fillable = [
+        // --- Información Básica & Identificación ---
         'name',
         'slug',
-        'description',
+        'type', // goods, service, combo
         'active',
-        'type',
+
+        // --- Control de Visibilidad (Flags) ---
         'sale_ok',
         'purchase_ok',
         'pos_ok',
-        'active',
-        'uom_id',
-        'uom_po_id',
+
+        // --- Categorización y Unidades ---
         'category_id',
+        'uom_id',    // Unidad de medida base
+        'uom_po_id', // Unidad de medida de compra (Purchase Order)
+
+        // --- Marca y Clasificación ---
+        'brand_id',
+        'modello_id',
+        'season_id',
+
+        // --- Contenido Web & Descripciones ---
+        'short_description',
+        'long_description',
+
+        // --- Optimización SEO (Google) ---
+        'title_google',
+        'description_google',
+        'keywords_google',
+
+        // --- Configuración de Suscripciones ---
+        'is_recurring',
+        'subscription_plan_id',
+        'recurring_price', // Si decidiste guardarlo en el template
+
+        // --- Contabilidad e Impuestos ---
+        'account_buy_id',
+        'account_sell_id',
+        'detraction_id',
     ];
 
+
+
+    protected $casts = [
+        'active'       => 'boolean',
+        'sale_ok'      => 'boolean',
+        'purchase_ok'  => 'boolean',
+        'pos_ok'       => 'boolean',
+        'is_recurring' => 'boolean',
+        // Si manejas precios decimales, asegúrate de esto:
+        'recurring_price' => 'decimal:2',
+    ];
 
 
     public function uom()
@@ -155,5 +193,21 @@ class ProductTemplate extends Model
             'product_template_id'
         )->withPivot(['sequence', 'active'])
             ->withTimestamps();
+    }
+
+    // Brochures activos y ordenados
+    public function brochures()
+    {
+        return $this->hasMany(ProductBrochure::class)
+            ->where('state', true)
+            ->orderBy('order', 'asc');
+    }
+
+    // Videos activos y ordenados
+    public function videos()
+    {
+        return $this->hasMany(ProductVideo::class)
+            ->where('state', true)
+            ->orderBy('order', 'asc');
     }
 }

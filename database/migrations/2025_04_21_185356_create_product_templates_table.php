@@ -25,6 +25,8 @@ return new class extends Migration
                 ->constrained('subscription_plans')
                 ->onDelete('set null');
 
+            $table->decimal('recurring_price', 12, 4)->nullable();
+
 
             $table->string('slug')->unique();
 
@@ -93,6 +95,18 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('accounts')
                 ->nullOnDelete();
+
+
+
+            // Descripciones
+            $table->string('short_description')->nullable();
+            $table->text('long_description')->nullable();
+
+            // SEO (Google)
+            $table->string('title_google', 70)->nullable(); // Recomendado 70 caracteres
+            $table->string('description_google', 160)->nullable(); // Recomendado 160 caracteres
+            $table->string('keywords_google')->nullable();
+
 
             /*
             |--------------------------------------------------------------------------

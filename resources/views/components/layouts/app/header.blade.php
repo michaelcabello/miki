@@ -4,6 +4,7 @@
 <head>
     @include('partials.head')
     @stack('styles')
+    <link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
@@ -120,6 +121,7 @@
 
     @stack('modals')
     @stack('scripts')
+    <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
     {{-- esto se usa para laravel tradicional --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {

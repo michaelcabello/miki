@@ -8,6 +8,7 @@
         ]" />
     </div>
 
+
     <!-- Header -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
         <div class="flex items-center justify-between gap-4">
@@ -79,6 +80,13 @@
                     <i class="fa-solid fa-layer-group mr-2"></i> Suscripciones
                 </button>
 
+                <button type="button" wire:click="setTab('web')"
+                    class="px-4 py-2 rounded-t-xl text-sm font-semibold transition
+                        {{ $tab === 'web'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fa-solid fa-layer-group mr-2"></i> Web
+                </button>
 
             </div>
         </div>
@@ -1191,7 +1199,103 @@
                 </div>
             @endif
 
-            @if ($tab === 'images')
+
+            @if ($tab === 'web')
+                <div class="space-y-6">
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                            <i class="fas fa-align-left mr-2 text-blue-500"></i> Contenido para la Web
+                        </h3>
+
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Descripción Corta</label>
+                                <input type="text" wire:model="short_description"
+                                    placeholder="Resumen rápido para listas de productos..."
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                @error('short_description')
+                                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- <div wire:ignore>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Descripción Larga (Detalle
+                                    del Producto)</label>
+
+
+                                <trix-editor input="long_description_input"
+                                    class="trix-content border-gray-300 rounded-md shadow-sm min-h-[200px] focus:ring-blue-500"
+                                    placeholder="Escribe aquí las especificaciones, beneficios y detalles..."></trix-editor>
+                                <input id="long_description_input" type="hidden" wire:model.lazy="long_description">
+                            </div> --}}
+
+
+                            <div class="mt-2" wire:ignore x-data="{
+                                content: @entangle('long_description'),
+                                isFocused() { return document.activeElement === this.$refs.trix }
+                            }" x-init="$watch('content', value => {
+                                if (!isFocused() && value !== $refs.trix.editor.getDocument().toString()) {
+                                    $refs.trix.editor.loadHTML(value);
+                                }
+                            })"
+                                x-on:trix-change="content = $event.target.value">
+
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Descripción Larga (Detalle del Producto)
+                                </label>
+
+                                <trix-editor x-ref="trix"
+                                    class="trix-content border-gray-300 rounded-md shadow-sm min-h-[200px] focus:ring-blue-500"
+                                    placeholder="Escribe aquí las especificaciones...">
+                                </trix-editor>
+                            </div>
+
+
+
+
+
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
+                        <h3 class="text-lg font-medium text-blue-900 mb-4 flex items-center">
+                            <i class="fab fa-google mr-2 text-blue-600"></i> Optimización SEO (Google)
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <div class="flex justify-between">
+                                    <label class="block text-sm font-medium text-gray-700">Meta Título (Google
+                                        Title)</label>
+                                    <span class="text-xs text-gray-500">{{ strlen($title_google) }}/70</span>
+                                </div>
+                                <input type="text" wire:model.live="title_google" maxlength="70"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <p class="mt-1 text-xs text-gray-400">Título que aparecerá en los resultados de
+                                    búsqueda.</p>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <div class="flex justify-between">
+                                    <label class="block text-sm font-medium text-gray-700">Meta Descripción</label>
+                                    <span class="text-xs text-gray-500">{{ strlen($description_google) }}/160</span>
+                                </div>
+                                <textarea wire:model.live="description_google" rows="3" maxlength="160"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                                <p class="mt-1 text-xs text-gray-400">Pequeño texto persuasivo para atraer clics en
+                                    Google.</p>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Palabras Clave
+                                    (Keywords)</label>
+                                <input type="text" wire:model="keywords_google"
+                                    placeholder="ej. retail, erp, ventas, odoo"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             @endif
 
         </div>

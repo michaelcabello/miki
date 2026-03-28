@@ -25,6 +25,7 @@ use Illuminate\Validation\Rule;
 use App\Models\PosCategory;
 use App\Models\PricelistItem;
 use App\Models\Pricelist;
+use Illuminate\Support\Facades\Log;
 
 //php artisan make:livewire Admin/Products/ProductCreate
 class ProductCreate extends Component
@@ -37,6 +38,9 @@ class ProductCreate extends Component
     public array $allPricelists = []; // Para el select del modal
 
     public $is_subscription = false; // Solo para controlar la UI (frontend)
+
+    public $short_description, $long_description;
+    public $title_google, $description_google, $keywords_google;
 
     // Variables que se guardarán en la DB
     public $subscription_plan_id;
@@ -68,7 +72,7 @@ class ProductCreate extends Component
     public string $type = 'goods';
     public bool $sale_ok = true;
     public bool $purchase_ok = false;
-    public bool $pos_ok = true;
+    public bool $pos_ok = false;
     public bool $active = true;
 
     //public ?int $tax_id = null;
@@ -157,6 +161,7 @@ class ProductCreate extends Component
         $this->tab = 'general';
         $this->attributeLines = []; // sin atributos al inicio
         $this->recalcVariants();
+        $this->pos_ok = false;
 
         $this->catalogAttributes = Attribute::query()
             ->where('state', true)
@@ -617,59 +622,75 @@ class ProductCreate extends Component
 
     public function save()
     {
-        $this->validate([
-            'name' => ['required', 'string', 'min:2', 'max:150'],
-            'type' => ['required', 'in:goods,service,combo'],
-            'base_price_sale' => ['nullable', 'numeric', 'min:0'],
-            'sku_prefix' => ['nullable', 'string', 'max:20'],
-            'sale_ok' => ['boolean'],
-            'purchase_ok' => ['boolean'],
-            'pos_ok' => ['boolean'],
+        try {
+            $validatedData = $this->validate([
+                'name' => ['required', 'string', 'min:2', 'max:150'],
+                'type' => ['required', 'in:goods,service,combo'],
+                'base_price_sale' => ['nullable', 'numeric', 'min:0'],
 
-            'pos_category_ids' => [
-                Rule::requiredIf($this->pos_ok),
-                'array'
-            ],
-            'pos_category_ids.*' => ['integer', 'exists:pos_categories,id'],
+                'account_sell_id' => ['required', 'exists:accounts,id'],
+                'account_buy_id'  => ['required', 'exists:accounts,id'],
 
-            'additional_product_ids' => ['array'],
-            'additional_product_ids.*' => ['integer', 'exists:product_templates,id'],
+                //'pos_category_ids' => [Rule::requiredIf($this->pos_ok), 'array'],
+
+                'sku_prefix' => ['nullable', 'string', 'max:20'],
+                'sale_ok' => ['boolean'],
+                'purchase_ok' => ['boolean'],
+                'pos_ok' => ['boolean'],
+                'pos_category_ids' => ['nullable', 'array'],
+                'pos_category_ids.*' => ['integer', 'exists:pos_categories,id'],
+
+                'additional_product_ids' => ['array'],
+                'additional_product_ids.*' => ['integer', 'exists:product_templates,id'],
 
 
-            'active' => ['boolean'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            //'tax_id' => ['nullable', 'exists:taxes,id'],
-            'sale_tax_ids' => ['array'],
-            'sale_tax_ids.*' => ['integer', 'exists:taxes,id'],
+                'active' => ['boolean'],
+                'category_id' => ['nullable', 'exists:categories,id'],
+                //'tax_id' => ['nullable', 'exists:taxes,id'],
+                'sale_tax_ids' => ['array'],
+                'sale_tax_ids.*' => ['integer', 'exists:taxes,id'],
 
-            'purchase_tax_ids' => ['array'],
-            'purchase_tax_ids.*' => ['integer', 'exists:taxes,id'],
+                'purchase_tax_ids' => ['array'],
+                'purchase_tax_ids.*' => ['integer', 'exists:taxes,id'],
 
-            'detraction_id' => ['nullable', 'exists:detractions,id'],
+                'detraction_id' => ['nullable', 'exists:detractions,id'],
 
-            'brand_id' => ['nullable', 'exists:brands,id'],
-            'modello_id' => ['nullable', 'exists:modellos,id'],
+                'brand_id' => ['nullable', 'exists:brands,id'],
+                'modello_id' => ['nullable', 'exists:modellos,id'],
 
-            'tracking' => ['nullable', 'in:quantity,serial,lot'],
+                'tracking' => ['nullable', 'in:quantity,serial,lot'],
 
-            'account_sell_id' => ['required', 'exists:accounts,id'],
-            'account_buy_id'  => ['required', 'exists:accounts,id'],
+                'account_sell_id' => ['required', 'exists:accounts,id'],
+                'account_buy_id'  => ['required', 'exists:accounts,id'],
 
-            // NUEVAS VALIDACIONES PARA SUSCRIPCIÓN
-            'is_subscription' => ['boolean'],
-            'subscription_plan_id' => [
-                Rule::requiredIf($this->is_subscription),
-                'nullable',
-                'exists:subscription_plans,id'
-            ],
-            'recurring_price' => [
-                Rule::requiredIf($this->is_subscription),
-                'nullable',
-                'numeric',
-                'min:0'
-            ],
+                // NUEVAS VALIDACIONES PARA SUSCRIPCIÓN
+                'is_subscription' => ['boolean'],
+                'subscription_plan_id' => [
+                    Rule::requiredIf($this->is_subscription),
+                    'nullable',
+                    'exists:subscription_plans,id'
+                ],
+                'recurring_price' => [
+                    Rule::requiredIf($this->is_subscription),
+                    'nullable',
+                    'numeric',
+                    'min:0'
+                ],
+                //para web y seo
+                'short_description' => ['nullable', 'string', 'max:255'],
+                'long_description' => ['nullable', 'string'],
+                'title_google' => ['nullable', 'string', 'max:70'],
+                'description_google' => ['nullable', 'string', 'max:160'],
+                'keywords_google' => ['nullable', 'string', 'max:255'],
 
-        ]);
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log de errores de validación para ver qué campo falla en la consola
+            Log::error("Fallo de validación:", $e->errors());
+            throw $e;
+        }
+
+        // Validación lógica de Marca/Modelo
 
         if ($this->modello_id && $this->brand_id) {
             $ok = Modello::where('id', $this->modello_id)
@@ -682,186 +703,224 @@ class ProductCreate extends Component
             }
         }
 
+        // 2. Inicio de la Transacción Atómica
+        DB::beginTransaction();
 
-        $name = trim($this->name);
+        try {
 
-        // slug único
-        $slug = Str::slug($name);
-        $baseSlug = $slug;
-        $i = 2;
-        while (ProductTemplate::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $i++;
-        }
+            $name = trim($this->name);
 
-        // 1) Crear template (sin precio)
-        /* $template = ProductTemplate::create([
-            'name' => $name,
-            'slug' => $slug,
-            'type' => $this->type,
-            'sale_ok' => $this->sale_ok,
-            'purchase_ok' => $this->purchase_ok,
-            'pos_ok' => $this->pos_ok,
-            'active' => $this->active,
-
-            'category_id' => $this->category_id ?: null,
-
-            'uom_id' => $this->uom_id ?: null,
-            'uom_po_id' => $this->uom_po_id ?: null,
-        ]); */
-
-        $template = ProductTemplate::create([
-            'name' => $name,
-            'slug' => $slug,
-            'type' => $this->type,
-
-            'sale_ok' => $this->sale_ok,
-            'purchase_ok' => $this->purchase_ok,
-            'pos_ok' => $this->pos_ok,
-            'active' => $this->active,
-
-            // nuevos
-            'category_id' => $this->category_id,
-            'uom_id' => $this->uom_id,
-            'uom_po_id' => $this->uom_po_id,
-
-            //'tax_id' => $this->tax_id,
-            'detraction_id' => $this->detraction_id,
-
-            'brand_id' => $this->brand_id,
-            'modello_id' => $this->modello_id,
-
-            'account_sell_id' => $this->account_sell_id, // ✅ cuenta contable VENTAS (70xx)
-            'account_buy_id'  => $this->account_buy_id,  // ✅ cuenta contable COMPRAS (60xx)
-
-            // CAMPOS DE SUSCRIPCIÓN (MAESTROS)
-            'is_subscription' => $this->is_subscription,
-            'subscription_plan_id' => $this->is_subscription ? $this->subscription_plan_id : null,
-            'recurring_price' => $this->is_subscription ? $this->recurring_price : null,
-
-        ]);
-
-
-        $template->posCategories()->sync(
-            $this->pos_ok
-                ? collect($this->pos_category_ids)->filter()->map(fn($x) => (int) $x)->values()->all()
-                : []
-        );
-
-        $template->additionalProducts()->sync(
-            $this->pos_ok
-                ? collect($this->additional_product_ids)
-                ->filter(fn($id) => (int) $id !== (int) $template->id)
-                ->mapWithKeys(fn($id) => [
-                    (int) $id => ['sequence' => 10, 'active' => true]
-                ])
-                ->all()
-                : []
-        );
-
-
-        // Impuestos (muchos a muchos)
-        $template->saleTaxes()->sync(
-            collect($this->sale_tax_ids)->filter()->map(fn($x) => (int)$x)->values()->all()
-        );
-
-        $template->purchaseTaxes()->sync(
-            collect($this->purchase_tax_ids)->filter()->map(fn($x) => (int)$x)->values()->all()
-        );
-
-
-
-
-        // 2) Procesar selección (atributos->valores)
-        $selectedByAttr = $this->getSelectedValuesByAttribute();
-
-
-        // Creamos líneas por atributo
-        foreach ($selectedByAttr as $attrId => $valueIds) {
-
-            $line = \App\Models\ProductTemplateAttribute::create([
-                'product_template_id' => $template->id,
-                'attribute_id' => $attrId,
-            ]);
-
-            // Guardamos valores permitidos para ese atributo dentro del producto
-            $line->values()->sync($valueIds);
-        }
-
-        // 3) Si no hay valores => SOLO variante default
-        if (empty($selectedByAttr)) {
-            $this->createDefaultVariant($template);
-            return redirect()->route('admin.products.index')
-                ->with('swal', ['icon' => 'success', 'title' => 'Listo', 'text' => 'Producto creado (sin variantes)']);
-        }
-
-        // 4) Crear variantes por combinaciones
-        $combinations = $this->cartesian(array_values($selectedByAttr));
-        $first = true;
-
-        foreach ($combinations as $valueIds) {
-            sort($valueIds);
-
-            // Cargar valores + atributo para construir key / nombre / extra
-            $values = AttributeValue::with('attribute')
-                ->whereIn('id', $valueIds)
-                ->get()
-                ->keyBy('id');
-
-            $pairs = [];
-            $nameParts = [];
-            $extraTotal = 0;
-
-            foreach ($valueIds as $vid) {
-                $v = $values[$vid] ?? null;
-                if (!$v) continue;
-
-                $pairs[] = $v->attribute_id . ':' . $v->id;
-                $nameParts[] = $v->name;
-                $extraTotal += (float) $v->extra_price;
+            // slug único
+            $slug = Str::slug($name);
+            $baseSlug = $slug;
+            $i = 2;
+            while (ProductTemplate::where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $i++;
             }
 
-            $combinationKey = implode('|', $pairs);
-            $variantName = implode(' - ', $nameParts);
 
-            // SKU (simple + único)
-            $sku = $this->buildSku($template->id, $nameParts);
+            // 3. Creación del Product Template
+            $template = ProductTemplate::create([
+                'name' => $name,
+                'slug' => $slug,
+                'type' => $this->type,
 
-            $barcode = blank($this->barcode) ? null : trim($this->barcode);
-            $reference = blank($this->reference) ? null : trim($this->reference);
+                'sale_ok' => $this->sale_ok,
+                'purchase_ok' => $this->purchase_ok,
+                'pos_ok' => $this->pos_ok,
+                'active' => $this->active,
 
-            $variant = ProductVariant::create([
-                'product_template_id' => $template->id,
-                'sku' => $sku,
-                //'barcode' => $this->barcode ?: null,
-                // si hay variantes: barcode solo para default (o null para todas)
-                'barcode' => $first ? $barcode : null,
-                'reference' => $reference,
+                // nuevos
+                'category_id' => $this->category_id,
+                'uom_id' => $this->uom_id,
+                'uom_po_id' => $this->uom_po_id,
 
-                // precio SOLO en variantes:
-                'price_sale' => (float) $this->base_price_sale + $extraTotal,
-                'price_wholesale' => null,
-                'price_purchase' => null,
+                //'tax_id' => $this->tax_id,
+                'detraction_id' => $this->detraction_id,
 
-                'active' => true,
-                'is_default' => $first,
+                'brand_id' => $this->brand_id,
+                'modello_id' => $this->modello_id,
 
-                'combination_key' => $combinationKey,
-                'variant_name' => $variantName,
+                'account_sell_id' => $this->account_sell_id, // ✅ cuenta contable VENTAS (70xx)
+                'account_buy_id'  => $this->account_buy_id,  // ✅ cuenta contable COMPRAS (60xx)
 
-                'tracking' => $this->tracking,
+                // CAMPOS DE SUSCRIPCIÓN (MAESTROS)
+                'is_recurring' => $this->is_subscription,
+                'subscription_plan_id' => $this->is_subscription ? $this->subscription_plan_id : null,
+                'recurring_price' => $this->is_subscription ? $this->recurring_price : null,
 
+                //web y seo
+                'short_description' => $this->short_description,
+                'long_description' => $this->long_description,
+                'title_google' => $this->title_google,
+                'description_google' => $this->description_google,
+                'keywords_google' => $this->keywords_google,
 
             ]);
 
-            // Pivot
-            $variant->values()->sync($valueIds);
 
-            $first = false;
+            // 4. Guardar Reglas de Precio (Pricelist Items)
+            // ============================================================
+            // NUEVO: GUARDAR REGLAS DE PRECIO (ESTILO ODOO)
+            // ============================================================
+            if (!empty($this->temporary_prices)) {
+                foreach ($this->temporary_prices as $tempRule) {
+                    PricelistItem::create([
+                        'pricelist_id'        => $tempRule['pricelist_id'],
+                        'product_template_id' => $template->id, // Vinculamos al nuevo producto
+                        'applied_on'          => '1_product',   // Aplicado a nivel de producto
+                        'compute_method'      => $tempRule['compute_method'],
+                        'fixed_price'         => $tempRule['fixed_price'] ?? 0,
+                        'percent_discount'    => $tempRule['percent_discount'] ?? 0,
+                        'min_qty'             => $tempRule['min_qty'] ?? 0,
+                        'date_start'          => !empty($tempRule['date_start']) ? $tempRule['date_start'] : null,
+                        'date_end'            => !empty($tempRule['date_end']) ? $tempRule['date_end'] : null,
+                    ]);
+                }
+            }
+
+            // 5. Sincronización de Relaciones (Muchos a Muchos)
+            //$template->posCategories()->sync(
+            //    $this->pos_ok
+            //        ? collect($this->pos_category_ids)->filter()->map(fn($x) => (int) $x)->values()->all()
+            //        : []
+            //);
+
+            $template->posCategories()->sync(
+                is_array($this->pos_category_ids)
+                    ? collect($this->pos_category_ids)->filter()->map(fn($x) => (int) $x)->values()->all()
+                    : []
+            );
+
+            $template->additionalProducts()->sync(
+                $this->pos_ok
+                    ? collect($this->additional_product_ids)
+                    ->filter(fn($id) => (int) $id !== (int) $template->id)
+                    ->mapWithKeys(fn($id) => [
+                        (int) $id => ['sequence' => 10, 'active' => true]
+                    ])
+                    ->all()
+                    : []
+            );
+
+
+            // Impuestos (muchos a muchos)
+            $template->saleTaxes()->sync(
+                collect($this->sale_tax_ids)->filter()->map(fn($x) => (int)$x)->values()->all()
+            );
+
+            $template->purchaseTaxes()->sync(
+                collect($this->purchase_tax_ids)->filter()->map(fn($x) => (int)$x)->values()->all()
+            );
+
+
+
+            // 6. Atributos y Variantes
+            // 2) Procesar selección (atributos->valores)
+            $selectedByAttr = $this->getSelectedValuesByAttribute();
+
+
+            // Creamos líneas por atributo
+            foreach ($selectedByAttr as $attrId => $valueIds) {
+
+                $line = \App\Models\ProductTemplateAttribute::create([
+                    'product_template_id' => $template->id,
+                    'attribute_id' => $attrId,
+                ]);
+
+                // Guardamos valores permitidos para ese atributo dentro del producto
+                $line->values()->sync($valueIds);
+            }
+
+            // 3) Si no hay valores => SOLO variante default
+            if (empty($selectedByAttr)) {
+                $this->createDefaultVariant($template);
+                DB::commit();
+                return redirect()->route('admin.products.index')
+                    ->with('swal', ['icon' => 'success', 'title' => 'Listo', 'text' => 'Producto creado (sin variantes)']);
+            }
+
+            // 4) Crear variantes por combinaciones
+            $combinations = $this->cartesian(array_values($selectedByAttr));
+            $first = true;
+
+            foreach ($combinations as $valueIds) {
+                sort($valueIds);
+
+                // Cargar valores + atributo para construir key / nombre / extra
+                $values = AttributeValue::with('attribute')
+                    ->whereIn('id', $valueIds)
+                    ->get()
+                    ->keyBy('id');
+
+                $pairs = [];
+                $nameParts = [];
+                $extraTotal = 0;
+
+                foreach ($valueIds as $vid) {
+                    $v = $values[$vid] ?? null;
+                    if (!$v) continue;
+
+                    $pairs[] = $v->attribute_id . ':' . $v->id;
+                    $nameParts[] = $v->name;
+                    $extraTotal += (float) $v->extra_price;
+                }
+
+                $combinationKey = implode('|', $pairs);
+                $variantName = implode(' - ', $nameParts);
+
+                // SKU (simple + único)
+                $sku = $this->buildSku($template->id, $nameParts);
+
+                $barcode = blank($this->barcode) ? null : trim($this->barcode);
+                $reference = blank($this->reference) ? null : trim($this->reference);
+
+                $variant = ProductVariant::create([
+                    'product_template_id' => $template->id,
+                    'sku' => $sku,
+                    //'barcode' => $this->barcode ?: null,
+                    // si hay variantes: barcode solo para default (o null para todas)
+                    'barcode' => $first ? $barcode : null,
+                    'reference' => $reference,
+
+                    // precio SOLO en variantes:
+                    'price_sale' => (float) $this->base_price_sale + $extraTotal,
+                    'price_wholesale' => null,
+                    'price_purchase' => null,
+
+                    'active' => true,
+                    'is_default' => $first,
+
+                    'combination_key' => $combinationKey,
+                    'variant_name' => $variantName,
+
+                    'tracking' => $this->tracking,
+
+
+                ]);
+
+                // Pivot
+                $variant->values()->sync($valueIds);
+
+                $first = false;
+            }
+            // 7. Commit si todo salió bien
+            DB::commit();
+            return redirect()->route('admin.products.index')
+                ->with('swal', ['icon' => 'success', 'title' => 'Listo', 'text' => 'Producto creado con variantes']);
+        } catch (\Exception $e) {
+            // 8. Rollback si algo falló
+            DB::rollBack();
+
+            // Log del error para debugear como pro
+            \Illuminate\Support\Facades\Log::error("Error creando producto: " . $e->getMessage());
+
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error de sistema',
+                'text' => 'No se pudo guardar el producto. Detalles: ' . $e->getMessage()
+            ]);
         }
-
-
-        return redirect()->route('admin.products.index')
-            ->with('swal', ['icon' => 'success', 'title' => 'Listo', 'text' => 'Producto creado con variantes']);
     }
 
 

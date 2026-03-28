@@ -193,13 +193,25 @@
 
 
 
-                                <!-- Ver -->
-                                <a {{-- href="{{ route('admin.users.show', $product_template) }}" --}}
+                                <a href="{{-- {{ route('admin.products.brochures', $product_template) }} --}}"
                                     class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 transition">
-                                    <i class="fa-solid fa-eye"></i>
+                                    <i class="fa-solid fa-file-pdf"></i>
                                     <span
-                                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100">Ver</span>
+                                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 whitespace-nowrap z-50">
+                                        Brochures/PDF
+                                    </span>
                                 </a>
+
+                                <a href="{{-- {{ route('admin.products.videos', $product_template) }} --}}"
+                                    class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-red-500 transition">
+                                    <i class="fa-solid fa-video"></i>
+                                    <span
+                                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 whitespace-nowrap z-50">
+                                        Videos
+                                    </span>
+                                </a>
+
+
                                 <!-- Editar -->
                                 <a href="{{ route('admin.products.edit', $product_template) }}"
                                     class="relative group inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-green-600 transition">
