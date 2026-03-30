@@ -123,4 +123,11 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /* no usaremos esto
+    'precision' => [
+        'purchase' => 2,
+        'stock'    => 3,
+        'currency' => 2,
+    ],
+     */
 ];

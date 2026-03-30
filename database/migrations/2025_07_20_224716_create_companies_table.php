@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('ruc')->nullable();
             $table->string('razonsocial')->nullable();
             $table->string('nombrecomercial')->nullable();
-            $table->string('razonsocialaws')->nullable();//este campo se crea para que cuando cambien algo en la razon social principal no afecte a la generacion de imagenes en aws
+            $table->string('razonsocialaws')->nullable(); //este campo se crea para que cuando cambien algo en la razon social principal no afecte a la generacion de imagenes en aws
             //este campo no se muestra estara oculto para el usuario
             $table->string('direccion')->nullable();
             $table->string('celular')->nullable();
@@ -46,14 +46,25 @@ return new class extends Migration
             $table->date('fechafincertificado')->nullable();
             $table->string('cliente_id')->nullable();
             $table->string('cliente_secret')->nullable();
-            $table->boolean('production')->default(0);//si no
+            $table->boolean('production')->default(0); //si no
             $table->boolean('state')->default(1);
             $table->string('ublversion')->nullable();
             $table->double('detraccion', 10, 4)->nullable();
-             $table->string('pago')->nullable();//controlaremos si pago o no pago, guardaremos encriptado
+            $table->string('pago')->nullable(); //controlaremos si pago o no pago, guardaremos encriptado
             //$table->foreignId('currency_id')->constrained();//moneda por defecto para los comprobantes
             $table->unsignedBigInteger('currency_id')->nullable();
             $table->foreign('currency_id')->references('id')->on('currencies')->onDelete('cascade');
+
+            // 🔹 Configuración de decimales por Tenant
+            $table->integer('decimal_purchase')->default(2)->comment('Decimales para precios de compra');
+            $table->integer('decimal_sale')->default(2)->comment('Decimales para precios de venta');
+            $table->integer('decimal_stock')->default(2)->comment('Decimales para cantidades de inventario');
+
+            // 🔹 Tipo de redondeo (Odoo style)
+            // 'round_per_line': Calcula impuestos por cada fila
+            // 'round_globally': Suma todas las bases y calcula el impuesto al final
+            $table->enum('tax_calculation_rounding', ['round_per_line', 'round_globally'])->default('round_per_line');
+
             $table->timestamps();
         });
     }

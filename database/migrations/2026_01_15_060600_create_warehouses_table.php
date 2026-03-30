@@ -16,9 +16,15 @@ return new class extends Migration
             $table->string('code', 10)->unique();
             $table->string('name');
             $table->text('description')->nullable();
+             $table->string('address')->nullable();
             $table->boolean('is_main')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            // ✅ AGREGAR ubicación de stock principal (se llena con seeder/observer)
+            $table->unsignedBigInteger('lot_stock_id')->nullable()
+                ->comment('Ubicación principal de stock interno');
+
         });
     }
 

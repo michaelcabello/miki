@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('point_of_sales', function (Blueprint $table) {
             $table->id();
-             $table->string('code', 20)->unique();      // PV1, PV2...
+            $table->string('code', 20)->unique();      // PV1, PV2...
             $table->string('name', 120);
 
             $table->string('annex_code', 10)->nullable(); // código anexo/local
@@ -21,7 +21,8 @@ return new class extends Migration
 
             $table->string('phone', 30)->nullable();
             $table->string('email', 120)->nullable();
-
+            // POS descuenta stock de este almacén
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             $table->boolean('state')->default(true);
             $table->timestamps();
         });

@@ -13,11 +13,32 @@ return new class extends Migration
     {
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique()->comment('P00001');
-            $table->foreignId('partner_id')->constrained();
-            $table->enum('state', ['draft', 'purchase', 'done', 'cancel'])->default('draft');
-            $table->decimal('amount_total', 15, 4);
+            $table->string('name')->unique(); // Referencia: P00001 (Odoo style)
+            $table->foreignId('partner_id')->constrained('partners')->comment('Proveedor'); //
+            $table->foreignId('currency_id')->constrained('currencies')->comment('Moneda de la compra'); //
+
+            // Almacén de destino (Retail: Tienda o Almacén Central)
+            $table->foreignId('warehouse_id')->constrained('warehouses')->comment('Almacén donde se recibirá el stock'); //
+            $table->foreignId('picking_type_id')->nullable()->constrained('stock_operation_types')->comment('Tipo de operación de recepción'); //
+
+            $table->timestamp('date_order')->comment('Fecha de la orden');
+            $table->timestamp('date_planned')->nullable()->comment('Fecha prevista de recepción');
+
+            // Totales
+            $table->decimal('amount_untaxed', 15, 4)->default(0)->comment('Subtotal sin impuestos');
+            $table->decimal('amount_tax', 15, 4)->default(0)->comment('Total impuestos');
+            $table->decimal('amount_total', 15, 4)->default(0)->comment('Total general');
+
+            // Estados Odoo: draft (RFQ), sent (Enviado), purchase (PO Confirmada), done (Finalizado), cancel (Cancelado)
+            $table->enum('state', ['draft', 'sent', 'to_approve', 'purchase', 'done', 'cancel'])->default('draft')->comment('Estado del flujo de compra');
+
+            $table->text('notes')->nullable()->comment('Notas internas');
             $table->timestamps();
+
+            // Índices cortos para evitar errores de longitud
+            $table->index(['partner_id'], 'idx_po_partner');
+            $table->index(['state'], 'idx_po_state');
+            $table->index(['date_order'], 'idx_po_date');
         });
     }
 

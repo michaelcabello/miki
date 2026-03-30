@@ -49,6 +49,8 @@ use App\Livewire\Admin\Partner\PartnerEdit;
 use App\Livewire\Admin\Pos\PosDemo;
 use App\Livewire\Admin\Products\Images\Index as ProductImagesIndex;
 use App\Livewire\Admin\Products\ProductEdit;
+use App\Livewire\Admin\Purchase\PurchaseOrder\PurchaseOrderCreate;
+use App\Livewire\Admin\Purchase\PurchaseOrder\PurchaseOrderList;
 use App\Livewire\Admin\SubscriptionPlan\SubscriptionPlanCreate;
 use App\Livewire\Admin\SubscriptionPlan\SubscriptionPlanEdit;
 use App\Livewire\Admin\SubscriptionPlan\SubscriptionPlanList;
@@ -156,15 +158,6 @@ Route::get('attributes/{attribute}/values', AttributeValueManager::class)
 
 
 
-
-
-
-
-
-
-
-
-
 Route::get('attributes/{attribute}/values', AttributeValueManager::class)->name('admin.attributes.values');
 
 
@@ -250,3 +243,7 @@ Route::get('subscription-plans/create', SubscriptionPlanCreate::class)
 Route::get('subscription-plans/{plan}/edit', SubscriptionPlanEdit::class)
     ->middleware('permission:SubscriptionPlan Update')
     ->name('admin.subscription-plans.edit');
+
+//compras
+Route::get('purchase/order/create', PurchaseOrderCreate::class)->name('purchase.order.create');
+Route::get('purchase/order/list', PurchaseOrderList::class)->name('purchase.order.index');

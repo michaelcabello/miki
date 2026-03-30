@@ -60,4 +60,13 @@ class ProductVariant extends Model
         return $this->hasOne(ProductImage::class, 'product_variant_id')
             ->where('is_primary', true);
     }
+
+    /**
+     * Relación: La variante pertenece a una plantilla (Odoo Style)
+     */
+    public function productTemplate(): BelongsTo
+    {
+        // Asegúrate de que la llave foránea en tu migración sea 'product_template_id'
+        return $this->belongsTo(ProductTemplate::class, 'product_template_id');
+    }
 }
