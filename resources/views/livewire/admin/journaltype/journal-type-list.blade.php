@@ -9,6 +9,7 @@
         ]" />
     </div>
 
+
     {{-- header --}}
     <div
         class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">

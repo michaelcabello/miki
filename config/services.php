@@ -36,9 +36,19 @@ return [
     ],
 
 
+    // Para buscar proveedores (Decolecta)
     'consulta_ruc' => [
-        'base_url' => env('CONSULTA_RUC_BASE_URL', 'https://api.apis.net.pe'),
+        'base_url' => env('CONSULTA_RUC_BASE_URL'),
         'token' => env('CONSULTA_RUC_TOKEN'),
     ],
+
+    // Para sincronizar el dólar (Apis.net.pe)
+    'apis_net_pe' => [
+        'base_url' => 'https://api.apis.net.pe',
+        'token' => env('APIS_NET_PE_TOKEN'),
+    ],
+
+
+
 
 ];

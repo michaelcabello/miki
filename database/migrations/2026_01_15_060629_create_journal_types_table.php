@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name', 120);
             $table->boolean('state')->default(true);
             $table->unsignedSmallInteger('order')->default(0);
+            $table->softDeletes(); // Esto crea la columna 'deleted_at' nullable
             $table->timestamps();
         });
     }

@@ -72,7 +72,7 @@ class JournalTypePolicy
      */
     public function restore(User $user, JournalType $journalType): bool
     {
-        return false;
+        return $user->hasPermissionTo('JournalType Restore');
     }
 
     /**
@@ -80,6 +80,6 @@ class JournalTypePolicy
      */
     public function forceDelete(User $user, JournalType $journalType): bool
     {
-        return false;
+        return $user->hasPermissionTo('JournalType ForceDelete');
     }
 }

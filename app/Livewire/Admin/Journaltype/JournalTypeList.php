@@ -39,7 +39,7 @@ class JournalTypeList extends Component
     public function mount(): void
     {
         $this->authorize('viewAny', JournalType::class); //para ver la lista eso es viewAny
-         $this->title = 'Tipos de Diario';
+        $this->title = 'Tipos de Diario';
     }
 
     public function updatingSearch()
@@ -299,7 +299,6 @@ class JournalTypeList extends Component
             ]);
         }
     }
-
 
 
 

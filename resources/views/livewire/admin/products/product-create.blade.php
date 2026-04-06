@@ -309,30 +309,6 @@
 
 
 
-                        {{-- <div>
-                            <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">Impuestos de
-                                compra</label>
-
-                            <select wire:model.defer="purchase_tax_ids" multiple
-                                class="mt-2 w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
-                                     bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                @foreach ($taxOptions as $t)
-                                    <option value="{{ $t['id'] }}">
-                                        {{ $t['name'] }}
-                                        ({{ rtrim(rtrim(number_format($t['amount'], 2), '0'), '.') }}{{ $t['amount_type'] === 'percent' ? '%' : '' }})
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            @error('purchase_tax_ids')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                            @error('purchase_tax_ids.*')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        --}}
-
 
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200">
@@ -341,7 +317,7 @@
 
                             <div
                                 class="mt-2 space-y-2 rounded-xl border border-gray-300 dark:border-gray-600 p-3 bg-white dark:bg-gray-700">
-                                @foreach ($taxOptions as $t)
+                                @foreach ($taxOptionsPurchase as $t)
                                     <label class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-200">
                                         <input type="checkbox" value="{{ $t['id'] }}"
                                             wire:model.defer="purchase_tax_ids"

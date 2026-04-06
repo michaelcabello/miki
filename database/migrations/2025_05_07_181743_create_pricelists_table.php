@@ -14,6 +14,14 @@ return new class extends Migration
         Schema::create('pricelists', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique(); // Default, Mayorista, POS Promo
+
+
+            // 🚀 El campo discriminador
+            $table->enum('type', ['sale', 'purchase'])
+                ->default('sale')
+                ->comment('Determina si la lista es para Clientes (sale) o Proveedores (purchase)');
+
+
             $table->boolean('state')->default(true);
 
             // lista por defecto según canal

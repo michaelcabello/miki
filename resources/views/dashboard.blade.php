@@ -54,7 +54,8 @@
                         ['title' => 'Diarios', 'img' => 'contable.jpg', 'route' => route('admin.journals.index'),  'permission' => 'Journal List',],
                         ['title' => 'Compañia', 'img' => 'contable.jpg', 'route' => route('admin.company.edit')],//hay que agregar su permiso como journaltypes
                         ['title' => 'Suscripciones', 'img' => 'contable.jpg', 'route' => route('admin.subscription-plans.index')],//hay que agregar su permiso como journaltypes
-                        ['title' => 'Solicitudes de Cotización', 'img' => 'contable.jpg', 'route' => route('purchase.order.create')],//hay que agregar su permiso como journaltypes
+                        ['title' => 'Solicitudes de Cotización', 'img' => 'contable.jpg', 'route' => route('purchase.order.index')],//hay que agregar su permiso como journaltypes
+                        ['title' => 'Impuestos', 'img' => 'contable.jpg', 'route' => route('admin.taxes.index'), 'permission' => 'Tax List'],//hay que agregar su permiso como
 
 
                     ];

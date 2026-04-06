@@ -89,6 +89,9 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'JournalType ExportExcel', 'display_name' => 'Exportar tipos de diarios a Excel', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'JournalType ExportPdf', 'display_name' => 'Exportar tipos de diarios a PDF', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'JournalType ImportExcel', 'display_name' => 'Importar tipos de diarios de Excel', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'JournalType Restore', 'display_name' => 'Restaurar tipos de diarios', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'JournalType ForceDelete', 'display_name' => 'Eliminar permanentemente tipos de diarios', 'model_name' => 'JournalType'])->SyncRoles([$adminRole]);
+
 
         Permission::create(['name' => 'Journal List', 'display_name' => 'Listar diarios', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'Journal View', 'display_name' => 'Ver diario', 'model_name' => 'Journal'])->SyncRoles([$adminRole]);
@@ -116,6 +119,18 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'SubscriptionPlan ExportExcel', 'display_name' => 'Exportar Planes de Subscripciones a Excel', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'SubscriptionPlan ExportPdf', 'display_name' => 'Exportar Planes de Subscripciones a PDF', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
         Permission::create(['name' => 'SubscriptionPlan ImportExcel', 'display_name' => 'Importar Planes de Subscripciones de Excel', 'model_name' => 'SubscriptionPlan'])->SyncRoles([$adminRole]);
+
+
+        Permission::create(['name' => 'Tax List', 'display_name' => 'Listar Impuestos', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Tax View', 'display_name' => 'Ver Impuestos', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Tax Create', 'display_name' => 'Crear Impuestos', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Tax Update', 'display_name' => 'Actualizar Impuestos', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Tax Delete', 'display_name' => 'Eliminar Impuestos', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Tax ExportExcel', 'display_name' => 'Exportar Impuestos a Excel', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Tax ExportPdf', 'display_name' => 'Exportar Impuestos a PDF', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Tax ImportExcel', 'display_name' => 'Importar Impuestos de Excel', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
+
+
 
 
         User::find(1)->assignRole($adminRole);

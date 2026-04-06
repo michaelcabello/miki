@@ -2,365 +2,346 @@
 
 namespace App\Livewire\Admin\Purchase\PurchaseOrder;
 
+use App\Models\Company;
 use Livewire\Component;
-
-use App\Models\Partner;
 use App\Models\Currency;
+use App\Models\CurrencyRate;
 use App\Models\Warehouse;
+use App\Models\ProductTemplate;
 use App\Models\ProductVariant;
+use App\Models\Partner;
 use App\Models\Uom;
-use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderLine;
-use Illuminate\Support\Facades\{DB, Log};
-use Carbon\Carbon;
-// Suponiendo que usas Jantinnerezo/LivewireAlert o similar para Toasts,
-// sino adaptarlo a tu sistema de notificaciones mostrado en el ejemplo (Toastr)
-//use Jantinnerezo\LivewireAlert\LivewireAlert;
+use App\Services\TaxService;
+use Illuminate\Support\Facades\Auth;
+use App\Services\Purchase\PurchaseOrderService; // 🚀 AGREGA ESTA LÍNEA
 
 class PurchaseOrderCreate extends Component
 {
-
-    // Cabecera
-    public $partner_id, $partner_name, $warehouse_id, $date_order, $date_approve, $currency_id, $notes;
+    // Propiedades de la Orden
+    public $partner_id, $partner_name, $warehouse_id, $date_order, $date_approve, $notes;
+    public $currency_id, $moneda_base_id, $currency_rate = 1, $currency_symbol = 'S/', $currency_code = 'PEN';
+    public $uoms = [];
+    // Totales
     public $amount_untaxed = 0, $amount_tax = 0, $amount_total = 0;
+    public $tax_group = [];
+    public $precision = 2;
 
-    // Líneas y Búsqueda
+    // Líneas y Búsquedas
     public $lines = [];
-    public $search_partner = '', $partner_results = [];
-    //public $warehouses = [], $currencies = [];
-    /** @var \Illuminate\Database\Eloquent\Collection */
-    public $warehouses;
-
-    /** @var \Illuminate\Database\Eloquent\Collection */
+    public $search_partner = '';
+    public $partner_results = [];
     public $currencies;
+    public $warehouses = [];
 
     public function mount()
     {
-        $this->warehouses = Warehouse::all(['id', 'name']);
-        $this->currencies = Currency::where('state', true)->get();
-        $this->date_order = Carbon::now()->format('Y-m-d');
-        $this->date_approve = Carbon::now()->addDays(7)->format('Y-m-d');
-        //$this->warehouse_id = $this->warehouses->first()->id ?? null;
-        $this->warehouse_id = null;
-        $this->currency_id = $this->currencies->where('principal', true)->first()->id ?? null;
+        $company = Company::first();
+
+        if (!$company) {
+            dd("Error crítico: No existe ningún registro en la tabla 'companies'.");
+        }
+
+        $this->uoms = Uom::where('active', true)->get();
+
+        $this->currencies = Currency::where('active', true)->get();
+        $this->warehouses = Warehouse::all();
+
+        $this->moneda_base_id = $company->currency_id;
+        $this->currency_id = $this->moneda_base_id;
+
+        $baseCurrency = $this->currencies->find($this->currency_id);
+        $this->currency_symbol = $baseCurrency->abbreviation ?? 'S/';
+        $this->currency_code = $baseCurrency->name ?? 'PEN';
+
+        $this->precision = $company->decimal_purchase ?? 2;
+        $this->date_order = now()->format('Y-m-d');
+        $this->date_approve = now()->addDays(7)->format('Y-m-d');
 
         $this->addLine();
     }
 
-    // --- LÓGICA DE PROVEEDORES ---
-    public function updatedSearchPartner()
+    /**
+     * 🚀 Búsqueda en tiempo real de Proveedores (Partners)
+     */
+    public function updatedSearchPartner($value)
     {
-        if (strlen($this->search_partner) < 2) {
+        if (strlen($value) < 2) {
             $this->partner_results = [];
             return;
         }
 
-        $this->partner_results = Partner::query()
-            ->where('supplier_rank', '>', 0) // REQUERIMIENTO: Solo proveedores
-            ->where(function ($query) {
-                $query->where('name', 'like', '%' . $this->search_partner . '%')
-                    ->orWhere('document_number', 'like', '%' . $this->search_partner . '%');
-            })
-            ->limit(10)->get(['id', 'name', 'document_number']);
+        $this->partner_results = Partner::where(function ($query) use ($value) {
+            $query->where('name', 'like', "%{$value}%")
+                ->orWhere('document_number', 'like', "%{$value}%");
+        })
+            ->limit(10)
+            ->get(['id', 'name', 'document_number'])
+            ->toArray();
     }
 
+    /**
+     * 🚀 Seleccionar Proveedor
+     */
     public function selectPartner($id, $name)
     {
         $this->partner_id = $id;
         $this->partner_name = $name;
-        $this->search_partner = '';
         $this->partner_results = [];
+        $this->search_partner = '';
     }
 
-    // --- LÓGICA DE LÍNEAS (GRILLA) ---
+    /**
+     * 🚀 Seleccionar Producto (Template -> Variant) y conversión de moneda
+     */
+    public function selectProductBack($index, $templateId)
+    {
+        $template = ProductTemplate::with('uom')->find($templateId);
+
+        if (!$template) return;
+
+        $variant = ProductVariant::where('product_template_id', $template->id)
+            ->where('active', true)
+            ->orderBy('is_default', 'desc')
+            ->first();
+
+        if (!$variant) {
+            session()->flash('error', 'El producto no tiene variantes activas.');
+            return;
+        }
+
+        $priceInBaseCurrency = floatval($variant->price_purchase ?? 0);
+
+        if ($this->currency_id != $this->moneda_base_id) {
+            $convertedPrice = $priceInBaseCurrency / max($this->currency_rate, 0.0001);
+        } else {
+            $convertedPrice = $priceInBaseCurrency;
+        }
+
+        $this->lines[$index]['product_id'] = $variant->id;
+        $this->lines[$index]['product_search'] = $template->name;
+        $this->lines[$index]['uom_name'] = $template->uom->name ?? 'Unidad';
+        $this->lines[$index]['price_unit'] = round($convertedPrice, $this->precision);
+        $this->lines[$index]['product_results'] = [];
+
+        $this->calculateTotals();
+    }
+
+
+
+
+    public function selectProduct($index, $templateId)
+    {
+        // 🚀 Cargamos el template con sus impuestos de compra
+        $template = ProductTemplate::with(['uom', 'purchaseTaxes'])->find($templateId);
+
+        if (!$template) return;
+
+        $variant = ProductVariant::where('product_template_id', $template->id)
+            ->where('active', true)
+            ->orderBy('is_default', 'desc')
+            ->first();
+
+        if (!$variant) {
+            session()->flash('error', 'El producto no tiene variantes activas.');
+            return;
+        }
+
+        $priceInBaseCurrency = floatval($variant->price_purchase ?? 0);
+
+        // Lógica de conversión de moneda
+        if ($this->currency_id != $this->moneda_base_id) {
+            $convertedPrice = $priceInBaseCurrency / max($this->currency_rate, 0.0001);
+        } else {
+            $convertedPrice = $priceInBaseCurrency;
+        }
+
+        $this->lines[$index]['product_id'] = $variant->id;
+        $this->lines[$index]['product_search'] = $template->name;
+        $this->lines[$index]['uom_name'] = $template->uom->name ?? 'Unidad';
+        $this->lines[$index]['price_unit'] = round($convertedPrice, $this->precision);
+        // Asignamos el ID de la unidad para el select
+        $this->lines[$index]['uom_id'] = $template->uom_id;
+        $this->lines[$index]['uom_name'] = $template->uom->name ?? 'Unidad';
+
+        // 🚀 LA CLAVE: Guardamos la DATA COMPLETA de los impuestos en la línea
+        // Tu TaxService recorre este array buscando 'amount_type', 'price_include', etc.
+        $this->lines[$index]['taxes'] = $template->purchaseTaxes->toArray();
+
+        $this->lines[$index]['product_results'] = [];
+
+        $this->calculateTotals();
+    }
+
+
+
+
+
+
+    public function updatedLines($value, $key)
+    {
+        if (str_contains($key, 'product_qty') || str_contains($key, 'price_unit')) {
+            $this->calculateTotals();
+        }
+
+        if (str_contains($key, 'product_search')) {
+            $parts = explode('.', $key);
+            $index = $parts[0];
+
+            if (strlen($value) > 1) {
+                $this->lines[$index]['product_results'] = ProductTemplate::query()
+                    ->select('product_templates.id', 'product_templates.name', 'product_variants.price_purchase')
+                    ->join('product_variants', 'product_templates.id', '=', 'product_variants.product_template_id')
+                    ->where('product_variants.is_default', true)
+                    ->where('product_templates.name', 'like', "%{$value}%")
+                    ->limit(5)
+                    ->get()
+                    ->toArray();
+            } else {
+                $this->lines[$index]['product_results'] = [];
+            }
+        }
+    }
+
+    public function updatedCurrencyId($value)
+    {
+        $company = Company::first();
+        $currency = $this->currencies->find($value);
+
+        if ($currency) {
+            $this->currency_symbol = $currency->abbreviation;
+            $this->currency_code = $currency->name;
+        }
+
+        if ($value == $company->currency_id) {
+            $this->currency_rate = 1;
+        } else {
+            $rateEntry = CurrencyRate::where('currency_id', $value)
+                ->where('date', '<=', $this->date_order)
+                ->orderBy('date', 'desc')
+                ->first();
+
+            $this->currency_rate = $rateEntry ? $rateEntry->sell_rate : 1;
+        }
+
+        $this->recalculateLinePrices();
+        $this->calculateTotals();
+    }
+
+    public function recalculateLinePrices()
+    {
+        foreach ($this->lines as $index => $line) {
+            if ($line['product_id']) {
+                $variant = ProductVariant::find($line['product_id']);
+                $priceInBase = floatval($variant->price_purchase ?? 0);
+
+                if ($this->currency_id != $this->moneda_base_id) {
+                    $newPrice = $priceInBase / max($this->currency_rate, 0.0001);
+                } else {
+                    $newPrice = $priceInBase;
+                }
+
+                $this->lines[$index]['price_unit'] = round($newPrice, $this->precision);
+            }
+        }
+    }
+
+    public function calculateTotals()
+    {
+        $taxService = new TaxService($this->precision);
+        $this->amount_untaxed = 0;
+        $this->amount_tax = 0;
+        $this->tax_group = [];
+
+        foreach ($this->lines as $index => $line) {
+            if (!($line['product_id'] ?? null)) continue;
+
+            $result = $taxService->computeTaxes(
+                floatval($line['price_unit']),
+                floatval($line['product_qty']),
+                $line['taxes'] ?? [],
+                floatval($this->currency_rate)
+            );
+
+            $this->lines[$index]['price_subtotal'] = $result['total_excluded'];
+            $this->lines[$index]['price_total'] = $result['total_included'];
+
+            foreach ($result['taxes'] as $tax) {
+                $name = $tax['name'];
+                $this->tax_group[$name] = ($this->tax_group[$name] ?? 0) + $tax['amount'];
+            }
+
+            $this->amount_untaxed += $result['total_excluded'];
+            $this->amount_tax += $result['total_taxes'];
+        }
+
+        $this->amount_total = round($this->amount_untaxed + $this->amount_tax, $this->precision);
+    }
+
     public function addLine()
     {
         $this->lines[] = [
             'product_id' => null,
+            'uom_id' => null, // 🚀 Agregamos esta llave
             'product_search' => '',
             'product_results' => [],
-            'name' => '',
-            'product_qty' => 1,
             'uom_name' => '',
+            'product_qty' => 1,
             'price_unit' => 0,
+            'taxes' => [],
             'price_subtotal' => 0,
-            'price_total' => 0, // 👈 AGREGAR ESTO: Evita el error de llave indefinida
-            'taxes' => [],      // 👈 AGREGAR ESTO: Evita errores en el foreach de calculateTotals
+            'price_total' => 0,
         ];
     }
 
     public function removeLine($index)
     {
         unset($this->lines[$index]);
-        $this->lines = array_values($this->lines); // Reindexar para mantener la integridad de Livewire
+        $this->lines = array_values($this->lines);
         $this->calculateTotals();
     }
 
-    /**
-     * Búsqueda Estilo Odoo 18: Template Name -> Show All Variants
-     */
-    public function updatedLines($value, $key)
-    {
-        if (str_contains($key, '.product_search')) {
-            $index = explode('.', $key)[0];
 
-            if (strlen($value) < 2) {
-                $this->lines[$index]['product_results'] = [];
-                return;
-            }
-
-            // REQUERIMIENTO: Buscamos por nombre de plantilla y mostramos sus variantes
-            $this->lines[$index]['product_results'] = ProductVariant::query()
-                ->with(['productTemplate.purchaseUom'])
-                ->whereHas('productTemplate', function ($q) use ($value) {
-                    $q->where('name', 'like', '%' . $value . '%');
-                })
-                ->limit(20) // Límite más alto para ver todas las variantes
-                ->get()
-                ->map(function ($variant) {
-                    return [
-                        'id' => $variant->id,
-                        // Formato Odoo: Plantilla (Variante)
-                        'display_name' => $variant->variant_name
-                            ? $variant->productTemplate->name . ' (' . $variant->variant_name . ')'
-                            : $variant->productTemplate->name,
-                        'price_purchase' => $variant->price_purchase,
-                        'uom_name' => $variant->productTemplate->purchaseUom->name ?? 'Unid'
-                    ];
-                })->toArray();
-        }
-
-        $this->calculateTotals();
-    }
-
-    public function selectProductBack($index, $productId)
-    {
-        // Cargamos la variante con su plantilla y sus impuestos de compra (relación Many-to-Many que tienes en tus migraciones)
-        $product = ProductVariant::with(['productTemplate.purchaseTaxes', 'productTemplate.purchaseUom'])->find($productId);
-
-        if ($product) {
-            $this->lines[$index]['product_id'] = $product->id;
-            $this->lines[$index]['name'] = $product->variant_name ?? $product->productTemplate->name;
-            $this->lines[$index]['price_unit'] = $product->price_purchase ?? 0;
-
-            // Guardamos los datos de los impuestos en la línea para no re-consultar la DB en cada cálculo
-            $this->lines[$index]['taxes'] = $product->productTemplate->purchaseTaxes->map(function ($tax) {
-                return [
-                    'id' => $tax->id,
-                    'amount' => $tax->amount,
-                    'amount_type' => $tax->amount_type,
-                    'price_include' => $tax->price_include,
-                    'include_base_amount' => $tax->include_base_amount,
-                ];
-            })->toArray();
-
-            $this->lines[$index]['uom_name'] = $product->productTemplate->purchaseUom->name ?? 'Unid';
-            $this->lines[$index]['product_search'] = $this->lines[$index]['name'];
-            $this->lines[$index]['product_results'] = [];
-
-            $this->calculateTotals();
-        }
-    }
-
-    public function selectProductBack2($index, $productId)
-    {
-        $product = ProductVariant::with(['productTemplate.purchaseTaxes', 'productTemplate.purchaseUom'])->find($productId);
-
-        if ($product) {
-            $this->lines[$index]['product_id'] = $product->id;
-            $this->lines[$index]['name'] = $product->variant_name ?? $product->productTemplate->name;
-            $this->lines[$index]['price_unit'] = $product->price_purchase ?? 0;
-
-            // Aseguramos que taxes sea un array, aunque esté vacío
-            $this->lines[$index]['taxes'] = $product->productTemplate->purchaseTaxes ? $product->productTemplate->purchaseTaxes->map(function ($tax) {
-                return [
-                    'id' => $tax->id,
-                    'amount' => $tax->amount,
-                    'amount_type' => $tax->amount_type,
-                    'price_include' => $tax->price_include,
-                    'active' => $tax->active,
-                    'include_base_amount' => $tax->include_base_amount,
-                ];
-            })->toArray() : [];
-
-            $this->lines[$index]['uom_name'] = $product->productTemplate->purchaseUom->name ?? 'Unid';
-            $this->lines[$index]['product_search'] = $this->lines[$index]['name'];
-            $this->lines[$index]['product_results'] = [];
-
-            $this->calculateTotals();
-        }
-    }
-
-    public function selectProduct($index, $productId)
-    {
-        // Cargamos la variante con sus relaciones
-        $product = ProductVariant::with(['productTemplate.purchaseTaxes', 'productTemplate.purchaseUom'])->find($productId);
-
-        if ($product) {
-            $this->lines[$index]['product_id'] = $product->id;
-            $this->lines[$index]['name'] = $product->variant_name ?? $product->productTemplate->name;
-            $this->lines[$index]['price_unit'] = $product->price_purchase ?? 0;
-
-            // 🚀 CORRECCIÓN: Mapear absolutamente todas las llaves que usa calculateTotals
-            $this->lines[$index]['taxes'] = $product->productTemplate->purchaseTaxes->map(function ($tax) {
-                return [
-                    'id' => $tax->id,
-                    'amount' => $tax->amount,
-                    'amount_type' => $tax->amount_type,
-                    'price_include' => (bool)$tax->price_include,
-                    'include_base_amount' => (bool)$tax->include_base_amount,
-                    'active' => (bool)$tax->active, // 👈 ESTA ERA LA LLAVE FALTANTE
-                ];
-            })->toArray();
-
-            $this->lines[$index]['uom_name'] = $product->productTemplate->purchaseUom->name ?? 'Unid';
-            $this->lines[$index]['product_search'] = $this->lines[$index]['name'];
-            $this->lines[$index]['product_results'] = [];
-
-            // Ejecutar el cálculo con los nuevos impuestos cargados
-            $this->calculateTotals();
-        }
-    }
-
-
-
-    public function calculateTotals()
-    {
-        // 1. Obtener la configuración del Tenant actual
-        // Asumimos que tienes la instancia de la compañía en una variable o servicio
-        $company = auth()->user()->company; // O la lógica que uses para multitenancy
-        $precision = $company->decimal_purchase ?? 2;
-
-        $this->amount_untaxed = 0;
-        $this->amount_tax = 0;
-
-        foreach ($this->lines as $index => $line) {
-            $qty = floatval($line['product_qty'] ?? 0);
-            $price_unit = floatval($line['price_unit'] ?? 0);
-            $taxes = $line['taxes'] ?? []; // Cargados previamente en selectProduct
-
-            if ($qty <= 0) {
-                $this->lines[$index]['price_subtotal'] = 0;
-                $this->lines[$index]['price_total'] = 0;
-                continue;
-            }
-
-            // --- INICIO DE LÓGICA DE IMPUESTOS ---
-
-            // A. Identificar impuestos incluidos para obtener el precio neto (Base)
-            $total_included_percent = 0;
-            foreach ($taxes as $tax) {
-                if ($tax['active'] && $tax['price_include'] && $tax['amount_type'] === 'percent') {
-                    $total_included_percent += ($tax['amount'] / 100);
-                }
-            }
-
-            // B. Calcular el Precio Unitario Neto (desglosando el impuesto si está incluido)
-            // Ejemplo: Si el precio es 118 y el IGV es 18% incluido -> Neto es 100
-            $net_unit_price = $price_unit / (1 + $total_included_percent);
-
-            // Redondeamos el unitario neto según la precisión de la empresa
-            $net_unit_price = round($net_unit_price, $precision);
-
-            // C. Base imponible de la línea
-            $base_line = round($net_unit_price * $qty, $precision);
-
-            // D. Calcular montos de impuestos (pueden ser varios)
-            $line_tax_total = 0;
-            foreach ($taxes as $tax) {
-                if (!$tax['active']) continue;
-
-                $tax_amount = 0;
-                if ($tax['amount_type'] === 'percent') {
-                    // Si el impuesto estaba incluido, el monto es la diferencia entre el bruto y el neto
-                    if ($tax['price_include']) {
-                        // Calculamos la proporción de este impuesto específico dentro del total incluido
-                        $tax_ratio = ($tax['amount'] / 100) / (1 + $total_included_percent);
-                        $tax_amount = ($price_unit * $tax_ratio) * $qty;
-                    } else {
-                        // Si no está incluido, se calcula sobre la base neta
-                        $tax_amount = $base_line * ($tax['amount'] / 100);
-                    }
-                } elseif ($tax['amount_type'] === 'fixed') {
-                    $tax_amount = $tax['amount'] * $qty;
-                }
-
-                $line_tax_total += round($tax_amount, $precision);
-
-                // Odoo: Si el impuesto afecta la base del siguiente (impuestos en cascada)
-                if ($tax['include_base_amount']) {
-                    $base_line += round($tax_amount, $precision);
-                }
-            }
-
-            // E. Asignación a la línea
-            // En Odoo, el subtotal de la línea SIEMPRE es sin impuestos (Base Imponible)
-            $this->lines[$index]['price_subtotal'] = $base_line;
-
-            // Guardamos el total con impuestos para mostrarlo en el Retail UI
-            $this->lines[$index]['price_total'] = round($base_line + $line_tax_total, $precision);
-
-            // F. Acumuladores generales
-            $this->amount_untaxed += $base_line;
-            $this->amount_tax += $line_tax_total;
-        }
-
-        // Redondeo final de totales según configuración de la empresa
-        $this->amount_untaxed = round($this->amount_untaxed, $precision);
-        $this->amount_tax = round($this->amount_tax, $precision);
-        $this->amount_total = round($this->amount_untaxed + $this->amount_tax, $precision);
-    }
-
-
-
-
-    public function save()
+    public function save(PurchaseOrderService $service)
     {
         $this->validate([
             'partner_id' => 'required',
-            'warehouse_id' => 'required',
-            'lines.*.product_id' => 'required',
-            'lines.*.product_qty' => 'required|numeric|gt:0',
-            'lines.*.price_unit' => 'required|numeric|min:0',
+            'lines' => 'required|array|min:1',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $count = PurchaseOrder::count() + 1;
-            $name = 'RFQ-' . now()->format('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+        $orderData = [
+            'partner_id' => $this->partner_id,
+            'currency_id' => $this->currency_id,
+            'warehouse_id' => $this->warehouse_id ?? 1, // Default por ahora
+            'date_order' => $this->date_order,
+            'date_approve' => $this->date_approve,
+            'amount_untaxed' => $this->amount_untaxed,
+            'amount_tax' => $this->amount_tax,
+            'amount_total' => $this->amount_total,
+            'currency_rate' => $this->currency_rate,
+        ];
 
-            $po = PurchaseOrder::create([
-                'name' => $name,
-                'partner_id' => $this->partner_id,
-                'currency_id' => $this->currency_id,
-                'warehouse_id' => $this->warehouse_id,
-                'date_order' => $this->date_order,
-                'amount_untaxed' => $this->amount_untaxed,
-                'amount_tax' => $this->amount_tax,
-                'amount_total' => $this->amount_total,
-                'state' => 'draft',
-                'notes' => $this->notes,
-            ]);
+        // Mapeamos las líneas del componente al formato de la DB
+        $linesData = collect($this->lines)->map(fn($l) => [
+            'product_id' => $l['product_id'],
+            'product_uom_id' => $l['uom_id'], // 🚀 Mapeo correcto a la DB
+            'name' => $l['product_search'],
+            'product_qty' => $l['product_qty'],
+            'price_unit' => $l['price_unit'],
+            'price_subtotal' => $l['price_subtotal'],
+            'price_total' => $l['price_total'],
+            'taxes_data' => $l['taxes'],
+        ])->toArray();
 
-            foreach ($this->lines as $line) {
-                $po->lines()->create([
-                    'product_id' => $line['product_id'],
-                    'name' => $line['name'],
-                    'product_qty' => $line['product_qty'],
-                    'price_unit' => $line['price_unit'],
-                    'price_subtotal' => $line['price_subtotal'],
-                ]);
-            }
+        $order = $service->createRFQ($orderData, $linesData);
 
-            DB::commit();
-            session()->flash('swal', ['icon' => 'success', 'title' => '¡Éxito!', 'text' => "RFQ $name creada."]);
-            return redirect()->route('purchase.order.index');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Error RFQ: " . $e->getMessage());
-            session()->flash('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se pudo guardar la orden.']);
-        }
+        session()->flash('success', "Solicitud {$order->name} guardada correctamente.");
+        return redirect()->route('purchase.order.index');
     }
+
+
+
+
+
 
     public function render()
     {

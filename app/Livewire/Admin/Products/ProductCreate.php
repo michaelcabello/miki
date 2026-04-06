@@ -85,6 +85,7 @@ class ProductCreate extends Component
     public ?string $tracking = 'quantity'; // quantity|serial|lot (o null)
 
     public array $taxOptions = [];
+    public array $taxOptionsPurchase = [];
     public array $detractionOptions = [];
     public array $brandOptions = [];
     public array $modelloOptions = [];
@@ -178,10 +179,18 @@ class ProductCreate extends Component
         // Taxes
         $this->taxOptions = Tax::query()
             ->where('active', true)
+            ->where('type_tax_use', 'sale')
             ->orderBy('sequence')
-            ->get(['id', 'name', 'amount', 'amount_type'])
-            ->map(fn($t) => $t->toArray())
-            ->all();
+            // 🚀 IMPORTANTE: Agregamos las columnas de control para el TaxService
+            ->get(['id', 'name', 'amount', 'amount_type', 'price_include', 'include_base_amount', 'is_base_affected'])
+            ->toArray();
+
+        $this->taxOptionsPurchase = Tax::query()
+            ->where('active', true)
+            ->where('type_tax_use', 'purchase')
+            ->orderBy('sequence')
+            ->get(['id', 'name', 'amount', 'amount_type', 'price_include', 'include_base_amount', 'is_base_affected'])
+            ->toArray();
 
         // Detractions
         $this->detractionOptions = Detraction::query()

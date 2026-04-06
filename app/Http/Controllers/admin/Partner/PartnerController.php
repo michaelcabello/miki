@@ -157,7 +157,7 @@ class PartnerController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+     public function create()
     {
 
         return view('admin.partners.create', [
@@ -166,7 +166,7 @@ class PartnerController extends Controller
             'pricelists'    => Pricelist::orderBy('name')->get(['id', 'name']),
             'currencies'    => Currency::orderBy('name')->get(['id', 'name']),
             'departments'   => Department::orderBy('name')->get(['id', 'name']),
-            // provincias/distritos se cargan vía JS o en edit según departamento (opcional)
+
         ]);
     }
 

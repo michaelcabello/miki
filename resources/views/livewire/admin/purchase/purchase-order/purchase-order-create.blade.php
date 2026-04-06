@@ -1,186 +1,228 @@
-<div class="space-y-6 p-4">
-    {{-- Breadcrumb al estilo de tu proyecto --}}
+<div class="space-y-6">
+    {{-- 1. Breadcrumb --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow px-6 py-3">
-        <div class="flex items-center gap-2 text-sm text-gray-500">
-            <span>Compras</span>
-            <span>/</span>
-            <span class="font-bold text-gray-800">Nueva Solicitud de Cotización</span>
+        <div class="flex items-center justify-between">
+            <x-breadcrumb :links="[
+                'Dashboard' => route('dashboard'),
+                'Compras' => '#',
+                'Nueva Solicitud de Cotización' => '#',
+            ]" />
+
+            @if ($currency_id && $moneda_base_id && $currency_id != $moneda_base_id)
+                @php
+                    $tc_actual = \App\Models\CurrencyRate::where('currency_id', $currency_id)
+                        ->orderBy('date', 'desc')
+                        ->first();
+                @endphp
+                <div
+                    class="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border
+                    {{ $tc_actual && $tc_actual->date->isToday() ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700' }}">
+                    @if ($tc_actual)
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>TC ({{ $tc_actual->date->format('d/m') }}): C {{ number_format($tc_actual->buy_rate, 3) }}
+                            | V {{ number_format($tc_actual->sell_rate, 3) }}</span>
+                    @else
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>TC no sincronizado hoy</span>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 
-    {{-- Formulario Principal --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-        {{-- Cabecera Odoo Style --}}
-        {{-- Parte del Formulario Superior --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div class="space-y-4">
-                {{-- Búsqueda de Partner --}}
-                <div class="relative">
-                    <label class="text-xs font-bold text-gray-400 uppercase">Proveedor</label>
-                    @if ($partner_id)
-                        <div
-                            class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-indigo-200">
-                            <span class="font-bold text-indigo-700">{{ $partner_name }}</span>
-                            <button wire:click="$set('partner_id', null)" class="text-red-500 text-xs">Cambiar</button>
-                        </div>
-                    @else
-                        <input type="text" wire:model.live.debounce.300ms="search_partner"
-                            placeholder="Buscar por nombre o RUC..."
-                            class="w-full rounded-xl border-gray-200 focus:ring-indigo-500 shadow-sm">
+    {{-- 2. Header --}}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Nueva Solicitud de Cotización</h1>
+                <p class="text-sm text-gray-500">Gestión de precios y proveedores para TICOM.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{-- {{ route('admin.purchase.index') }} --}}"
+                    class="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-800 font-semibold transition hover:bg-gray-200">
+                    Cancelar
+                </a>
+                <button wire:click="save"
+                    class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-semibold shadow-sm transition active:scale-95">
+                    Guardar Orden
+                </button>
+            </div>
+        </div>
+    </div>
 
-                        @if (count($partner_results) > 0)
+    {{-- 3. Formulario (Sin overflow-hidden en el contenedor principal) --}}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow">
+        <div class="p-6 space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                {{-- Proveedor --}}
+                <div class="md:col-span-7">
+                    <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Proveedor</label>
+                    <div class="relative">
+                        @if ($partner_id)
                             <div
-                                class="absolute z-50 w-full bg-white shadow-2xl rounded-xl mt-1 border border-gray-100 overflow-hidden">
-                                @foreach ($partner_results as $res)
-                                    <div wire:click="selectPartner({{ $res['id'] }}, '{{ $res['name'] }}')"
-                                        class="p-3 hover:bg-indigo-50 cursor-pointer flex justify-between items-center border-b last:border-0">
-                                        <span class="text-sm font-semibold text-gray-700">{{ $res['name'] }}</span>
-                                        <span class="text-xs text-gray-400">{{ $res['document_number'] }}</span>
-                                    </div>
-                                @endforeach
+                                class="flex items-center justify-between bg-indigo-50 p-2.5 rounded-xl border border-indigo-100">
+                                <span class="font-bold text-indigo-700 ml-2"><i class="fa-solid fa-user-check mr-2"></i>
+                                    {{ $partner_name }}</span>
+                                <button type="button" wire:click="$set('partner_id', null)"
+                                    class="text-xs font-bold text-red-600 hover:underline">Cambiar</button>
                             </div>
+                        @else
+                            <div class="relative">
+                                <i
+                                    class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" wire:model.live.debounce.300ms="search_partner"
+                                    placeholder="Buscar por nombre o RUC..."
+                                    class="w-full h-11 pl-11 rounded-xl border border-gray-300 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition text-sm">
+                            </div>
+                            {{-- Resultados de Proveedor con wire:key --}}
+                            @if (count($partner_results) > 0)
+                                <div
+                                    class="absolute z-50 w-full bg-white shadow-2xl rounded-xl mt-2 border border-gray-100 overflow-hidden">
+                                    @foreach ($partner_results as $res)
+                                        <button type="button" wire:key="partner-{{ $res['id'] }}"
+                                            wire:click="selectPartner({{ $res['id'] }}, '{{ addslashes($res['name']) }}')"
+                                            class="w-full p-3 hover:bg-indigo-50 text-left flex justify-between items-center border-b last:border-0 transition">
+                                            <span class="text-sm font-semibold text-gray-700">{{ $res['name'] }}</span>
+                                            <span class="text-xs text-gray-400">{{ $res['document_number'] }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
                         @endif
-                    @endif
+                    </div>
                 </div>
 
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Entregar a (Almacén)</label>
-                    <select wire:model="warehouse_id"
-                        class="w-full rounded-xl border-gray-200 focus:ring-indigo-500 shadow-sm">
-                        {{-- Opción por defecto (Placeholder) --}}
-                        <option value="">Seleccione almacén de recepción...</option>
-                        @foreach ($warehouses as $wh)
-                            <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                {{-- Moneda y Fecha --}}
+                <div class="md:col-span-3">
+                    <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Moneda</label>
+                    <select wire:model.live="currency_id"
+                        class="w-full h-11 px-4 rounded-xl border border-gray-300 text-sm font-bold text-indigo-700">
+                        @foreach ($currencies as $curr)
+                            <option value="{{ $curr->id }}">{{ $curr->name }} ({{ $curr->abbreviation }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
+                <div class="md:col-span-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Fecha Límite</label>
+                    <input type="date" wire:model="date_approve"
+                        class="w-full h-11 px-4 rounded-xl border border-gray-300 text-sm">
+                </div>
             </div>
 
+            {{-- Tabla de Productos (Contenedor con overflow-visible) --}}
             <div class="space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Fecha Límite (Orden)</label>
-                    <input type="date" wire:model="date_approve" class="w-full rounded-xl border-gray-200 shadow-sm">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Referencia de Proveedor</label>
-                    <input type="text" wire:model="notes" placeholder="Ej: Cotización #123"
-                        class="w-full rounded-xl border-gray-200 shadow-sm">
-                </div>
-            </div>
-        </div>
+                <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-list-ul text-indigo-500"></i> Líneas de productos
+                </h3>
 
+                {{-- CAMBIO CRÍTICO: Eliminado overflow-hidden aquí --}}
+                <div class="border border-gray-200 rounded-2xl overflow-visible">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr
+                                class="bg-gray-50 text-[11px] font-black text-gray-500 uppercase tracking-wider border-b">
+                                <th class="py-4 px-4">Producto</th>
+                                <th class="py-4 px-2 w-24 text-center">UoM</th>
+                                <th class="py-4 px-2 w-32 text-center">Cantidad</th>
+                                <th class="py-4 px-2 w-32 text-right">Precio Unit.</th>
+                                <th class="py-4 px-4 w-40 text-right">Subtotal</th>
+                                <th class="py-4 px-4 w-12"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach ($lines as $index => $line)
+                                {{-- wire:key vital para que Livewire no rompa la búsqueda en bucles --}}
+                                <tr wire:key="line-{{ $index }}"
+                                    class="group hover:bg-gray-50/50 transition-colors">
+                                    <td class="py-3 px-4 relative">
+                                        <input type="text"
+                                            wire:model.live.debounce.300ms="lines.{{ $index }}.product_search"
+                                            placeholder="Buscar producto..."
+                                            class="w-full bg-transparent border-0 focus:ring-0 text-sm font-semibold p-0">
 
-        {{-- Grilla de Productos --}}
-        <div class="overflow-visible">
-            <table class="w-full text-left">
-                <thead class="bg-gray-50/50">
-                    <tr class="text-xs font-bold text-gray-400 uppercase border-b">
-                        <th class="py-3 px-2">Producto</th>
-                        <th class="py-3 px-2">UoM</th>
-                        <th class="py-3 px-2">Cantidad</th>
-                        <th class="py-3 px-2">Precio Unit.</th>
-                        <th class="py-3 px-2 text-right">Subtotal</th>
-                        <th class="py-3 px-2"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @foreach ($lines as $index => $line)
-                        <tr class="group">
-
-
-                            <td class="py-4 px-2 relative w-1/3">
-                                <input type="text"
-                                    wire:model.live.debounce.300ms="lines.{{ $index }}.product_search"
-                                    placeholder="Buscar producto..."
-                                    class="w-full border-0 focus:ring-0 bg-transparent text-sm font-semibold p-0">
-
-                                @if (count($line['product_results']) > 0)
-                                    <div
-                                        class="absolute z-40 left-0 w-full bg-white shadow-2xl rounded-lg mt-1 border border-gray-100 max-h-60 overflow-y-auto">
-                                        @foreach ($line['product_results'] as $res)
-                                            <div wire:click="selectProduct({{ $index }}, {{ $res['id'] }})"
-                                                class="p-3 hover:bg-indigo-50 cursor-pointer text-xs border-b last:border-0 transition">
-                                                <p class="font-bold text-gray-800">{{ $res['display_name'] }}</p>
-                                                <p class="text-gray-400">Precio Ref: S/
-                                                    {{ number_format($res['price_purchase'], 2) }}</p>
+                                        @if (count($line['product_results']) > 0)
+                                            <div
+                                                class="absolute z-40 left-0 w-full bg-white shadow-2xl rounded-xl mt-2 border border-gray-200 max-h-60 overflow-y-auto">
+                                                @foreach ($line['product_results'] as $res)
+                                                    <button type="button"
+                                                        wire:key="prod-{{ $res['id'] }}-{{ $index }}"
+                                                        wire:click="selectProduct({{ $index }}, {{ $res['id'] }})"
+                                                        class="w-full p-3 hover:bg-indigo-50 text-left border-b last:border-0 transition">
+                                                        <p class="text-sm font-bold text-gray-800">{{ $res['name'] }}
+                                                        </p>
+                                                        <p class="text-[10px] text-gray-400">Ref: S/
+                                                            {{ number_format($res['price_purchase'] ?? 0, 2) }}</p>
+                                                    </button>
+                                                @endforeach
                                             </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </td>
+                                        @endif
+                                    </td>
+                                    {{-- <td class="py-3 px-2 text-center text-xs text-gray-500">{{ $line['uom_name'] }}</td> --}}
+                                    <td class="py-3 px-2">
+                                        <select wire:model.live="lines.{{ $index }}.uom_id"
+                                            class="w-full bg-transparent border-0 focus:ring-0 text-xs text-gray-500 p-0 text-center cursor-pointer hover:text-indigo-600 transition-colors">
+                                            @foreach ($uoms as $uom)
+                                                <option value="{{ $uom->id }}">{{ $uom->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="py-3 px-2">
+                                        <input type="number" wire:model.live="lines.{{ $index }}.product_qty"
+                                            class="w-full bg-transparent border-0 focus:ring-0 text-center font-bold text-indigo-600 p-0">
+                                    </td>
+                                    <td class="py-3 px-2">
+                                        <input type="number" wire:model.live="lines.{{ $index }}.price_unit"
+                                            class="w-full bg-transparent border-0 focus:ring-0 text-right font-medium p-0"
+                                            placeholder="0.00">
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-bold text-gray-700">
+                                        {{ $currency_symbol ?? 'S/' }} {{ number_format($line['price_subtotal'], 2) }}
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <button type="button" wire:click="removeLine({{ $index }})"
+                                            class="text-gray-300 hover:text-red-500 transition-colors">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
-                            <td class="py-4 px-2 text-sm text-gray-500">
-                                {{ $line['uom_name'] }} {{-- Campo solicitado --}}
-                            </td>
+                <button type="button" wire:click="addLine"
+                    class="flex items-center gap-2 px-4 py-2 rounded-xl text-indigo-600 font-bold text-xs hover:bg-indigo-50 transition-all">
+                    <i class="fa-solid fa-plus-circle text-lg"></i> Añadir producto o servicio
+                </button>
+            </div>
 
-                            <td class="py-4 px-2">
-                                <input type="number" wire:model.live="lines.{{ $index }}.product_qty"
-                                    class="w-20 border-0 focus:ring-0 bg-transparent text-sm font-bold @error('lines.' . $index . '.product_qty') text-red-500 @enderror"
-                                    placeholder="0.00">
-                            </td>
-
-                            <td class="py-4 px-2">
-                                <input type="number" wire:model.live="lines.{{ $index }}.price_unit"
-                                    class="w-28 border-0 focus:ring-0 bg-transparent text-sm @if ($line['price_unit'] == '') bg-yellow-50 @endif"
-                                    placeholder="Llenar precio...">
-                            </td>
-
-                            <td class="py-4 px-2 text-right font-bold text-gray-700">
-                                S/ {{ number_format($line['price_subtotal'], 2) }}
-                            </td>
-
-                            {{-- Botón Eliminar Corregido --}}
-                            <td class="py-4 px-2 text-center">
-                                <button wire:click="removeLine({{ $index }})"
-                                    class="text-gray-300 hover:text-red-500 transition-colors">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </td>
-
-                        </tr>
+            {{-- Totales --}}
+            <div class="flex justify-end pt-6 border-t border-gray-100">
+                <div class="w-full md:w-80 space-y-3">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-medium">Base Imponible</span>
+                        <span class="text-gray-800 font-bold">{{ $currency_symbol ?? 'S/' }}
+                            {{ number_format($amount_untaxed, $precision, '.', ',') }}</span>
+                    </div>
+                    @foreach ($tax_group as $taxName => $taxAmount)
+                        @if ($taxAmount > 0)
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-500 font-medium">{{ $taxName }}</span>
+                                <span class="text-indigo-600 font-bold">{{ $currency_symbol ?? 'S/' }}
+                                    {{ number_format($taxAmount, $precision, '.', ',') }}</span>
+                            </div>
+                        @endif
                     @endforeach
-                </tbody>
-            </table>
-
-            <button wire:click="addLine" class="mt-4 text-indigo-600 font-bold text-sm hover:underline">
-                + Añadir línea
-            </button>
-        </div>
-
-
-
-
-
-        {{-- Sección de Totales --}}
-        <div class="mt-10 flex justify-end">
-            <div class="w-full md:w-64 space-y-2 border-t pt-4">
-
-                @php
-                    // Obtenemos la precisión de la empresa actual
-                    $precision = auth()->user()->company->decimal_purchase ?? 2;
-                @endphp
-
-                <div class="flex justify-between text-gray-600">
-                    <span>Base Imponible:</span>
-                    <span>S/ {{ number_format($amount_untaxed, $precision) }}</span>
+                    <div class="pt-4 border-t-2 border-indigo-50">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-black text-gray-800 uppercase">Total</span>
+                            <span
+                                class="text-3xl font-black text-indigo-600 tracking-tighter">{{ $currency_symbol ?? 'S/' }}
+                                {{ number_format($amount_total, $precision, '.', ',') }}</span>
+                        </div>
+                    </div>
                 </div>
-
-
-
-                {{-- En la grilla de productos --}}
-
-                <div class="flex justify-between text-gray-600">
-                    <span>Impuestos (IGV):</span>
-                    <span class="text-indigo-600 font-bold">S/ {{ number_format($amount_tax, $precision) }}</span>
-                </div>
-
-                <div class="flex justify-between text-xl font-bold text-indigo-700 border-t pt-2">
-                    <span>Total a Pagar:</span>
-                    <span>S/ {{ number_format($amount_total, $precision) }}</span>
-                </div>
-
-
-
             </div>
         </div>
     </div>

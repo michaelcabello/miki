@@ -13,29 +13,27 @@ return new class extends Migration
     {
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // Referencia: P00001 (Odoo style)
-            $table->foreignId('partner_id')->constrained('partners')->comment('Proveedor'); //
-            $table->foreignId('currency_id')->constrained('currencies')->comment('Moneda de la compra'); //
+            $table->string('name')->unique();
+            $table->foreignId('partner_id')->constrained('partners');
+            $table->foreignId('currency_id')->constrained('currencies');
+            $table->foreignId('warehouse_id')->constrained('warehouses');
+            $table->foreignId('picking_type_id')->nullable()->constrained('stock_operation_types');
+            $table->foreignId('user_id')->constrained('users');
 
-            // Almacén de destino (Retail: Tienda o Almacén Central)
-            $table->foreignId('warehouse_id')->constrained('warehouses')->comment('Almacén donde se recibirá el stock'); //
-            $table->foreignId('picking_type_id')->nullable()->constrained('stock_operation_types')->comment('Tipo de operación de recepción'); //
+            $table->timestamp('date_order');
+            $table->timestamp('date_planned')->nullable();
 
-            $table->timestamp('date_order')->comment('Fecha de la orden');
-            $table->timestamp('date_planned')->nullable()->comment('Fecha prevista de recepción');
+            $table->decimal('amount_untaxed', 15, 4)->default(0);
+            $table->decimal('amount_tax', 15, 4)->default(0);
+            $table->decimal('amount_total', 15, 4)->default(0);
+            $table->decimal('currency_rate', 12, 6)->default(1);
 
-            // Totales
-            $table->decimal('amount_untaxed', 15, 4)->default(0)->comment('Subtotal sin impuestos');
-            $table->decimal('amount_tax', 15, 4)->default(0)->comment('Total impuestos');
-            $table->decimal('amount_total', 15, 4)->default(0)->comment('Total general');
-
-            // Estados Odoo: draft (RFQ), sent (Enviado), purchase (PO Confirmada), done (Finalizado), cancel (Cancelado)
-            $table->enum('state', ['draft', 'sent', 'to_approve', 'purchase', 'done', 'cancel'])->default('draft')->comment('Estado del flujo de compra');
-
-            $table->text('notes')->nullable()->comment('Notas internas');
+            $table->enum('state', ['draft', 'sent', 'to_approve', 'purchase', 'done', 'cancel'])->default('draft');
+            $table->string('pdf_path')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
 
-            // Índices cortos para evitar errores de longitud
+            // 🚀 Tus índices reintegrados
             $table->index(['partner_id'], 'idx_po_partner');
             $table->index(['state'], 'idx_po_state');
             $table->index(['date_order'], 'idx_po_date');
