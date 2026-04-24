@@ -5,6 +5,11 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Observers\ContactObserver;
 use App\Models\Contact;
+use Illuminate\Support\Facades\Gate;
+use App\Models\Warehouse;
+use App\Observers\WarehouseObserver;
+
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -20,6 +25,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-         Contact::observe(ContactObserver::class);
+        Contact::observe(ContactObserver::class);
+        Warehouse::observe(WarehouseObserver::class);
+
+        // 🚀 Este es el "Poder Absoluto" del Admin para todo el ERP
+        // Se ejecuta ANTES de cualquier otra validación (Gates o Policies)
+        Gate::before(function ($user, $ability) {
+            return $user->hasRole('Admin') ? true : null;
+        });
     }
 }

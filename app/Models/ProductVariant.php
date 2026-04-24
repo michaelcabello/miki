@@ -69,4 +69,11 @@ class ProductVariant extends Model
         // Asegúrate de que la llave foránea en tu migración sea 'product_template_id'
         return $this->belongsTo(ProductTemplate::class, 'product_template_id');
     }
+
+    //para obtener la cantidad de productos
+    public function getStockActualAttribute()
+    {
+        // Suma las cantidades de todas las ubicaciones de tipo 'internal'
+        return $this->quants()->sum('qty');
+    }
 }

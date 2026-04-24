@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Livewire\Admin\Journaltype;
-
+//use App\Exports\Admin\JournalTypeExport;
 use Livewire\Component;
 use App\Models\JournalType;
 use App\Traits\WithStandardTable; // 🚀 Importado de la nueva ubicación
@@ -9,40 +9,53 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 
+//use Maatwebsite\Excel\Facades\Excel;
+//use Barryvdh\DomPDF\Facade\Pdf;
+
 #[Title('Tipos de Diario')]
 class JournalTypeListdos extends Component
 {
-
     use WithStandardTable;
-    public $showTrashed = false; // 🚀 Agrega esta propiedad al inicio de la clase
+    //public $showTrashed = false; // 🚀 Agrega esta propiedad al inicio de la clase, es para ocultar al inicio el softdeletes
+    //public $search = '';
 
     public function mount(): void
     {
-        // 🔒 Seguridad de Nivel 1: Ver la lista
+        // Seguridad de Nivel 1: Ver la lista
         $this->authorize('viewAny', JournalType::class);
         $this->sortField = 'order'; // Valor inicial específico para este módulo
+
+        $this->columns = [
+            'order' => false,
+            'code'  => true,
+            'name'  => true,
+            'state' => true,
+        ];
     }
 
 
-    #[On('deleteSingle')]
-    public function deleteSingle($data): void
+    #[On('deleteSingle')] // 🚀 Escucha el evento global
+    public function deleteSingle($id, $name): void // 👈 Cambiamos $data por los nombres reales
     {
-        // Livewire 3 recibe los parámetros del dispatch de JS como un array
-        $id = $data['id'];
-        $name = $data['name'];
-
+        // Buscamos el registro
         $item = JournalType::findOrFail($id);
+        // 🔒 Seguridad: Validamos Policy
         $this->authorize('delete', $item);
-
+        // Validación de integridad contable
         if ($item->journals()->exists()) {
-            $this->dispatch('show-swalindex', ['text' => 'Tiene diarios asociados.', 'icon' => 'warning']);
+            $this->dispatch('show-swalindex', [
+                'title' => 'Acción bloqueada',
+                'text' => "El registro '{$name}' tiene movimientos asociados.",
+                'icon' => 'warning'
+            ]);
             return;
         }
-
+        // 🚀 Borrado lógico
         $item->delete();
-        $this->dispatch('itemDeleted', [
-            'title' => 'Eliminado',
-            'text' => "Registro '{$name}' eliminado correctamente",
+        // Notificación de éxito
+        $this->dispatch('show-swalindex', [
+            'title' => '¡Eliminado!',
+            'text' => "El registro '{$name}' se movió a la papelera.",
             'icon' => 'success'
         ]);
     }
@@ -70,20 +83,49 @@ class JournalTypeListdos extends Component
         return $query;
     }
 
-    // 🚀 MÉTODO PARA RESTAURAR
-    public function restore($id)
+
+
+
+
+    #[On('restoreSingle')]
+    public function restoreSingle(int $id, string $name): void
     {
-        $this->authorize('JournalType Restore'); // Permiso específico
+        try {
+            // Paso 1: Localizar el registro en la papelera ANTES de autorizar
+            // (necesitamos la instancia para que la Policy funcione correctamente)
+            $item = JournalType::onlyTrashed()->findOrFail($id);
 
-        $item = JournalType::onlyTrashed()->findOrFail($id);
-        $item->restore();
+            // Paso 2: Validar seguridad pasando la INSTANCIA a la Policy
+            $this->authorize('restore', $item);
 
-        $this->dispatch('show-swalindex', [
-            'title' => 'Restaurado',
-            'text' => "El registro '{$item->name}' ha vuelto a la lista activa.",
-            'icon' => 'success'
-        ]);
+            // Paso 3: Ejecutar la restauración
+            $item->restore();
+
+            // Paso 4: Limpiar selección y notificar
+            $this->resetSelection();
+
+            $this->dispatch('show-swalindex', [
+                'icon'  => 'success',
+                'title' => '¡Registro Restaurado!',
+                'text'  => "El tipo de diario '{$name}' ha vuelto a la lista activa.",
+            ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->dispatch('show-swalindex', [
+                'icon'  => 'error',
+                'title' => 'Acceso denegado',
+                'text'  => 'No tienes permiso para restaurar registros.',
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('show-swalindex', [
+                'icon'  => 'error',
+                'title' => 'Error al restaurar',
+                'text'  => 'No se pudo recuperar el registro: ' . $e->getMessage(),
+            ]);
+        }
     }
+
+
+
 
 
     #[On('confirmRestoreSelected')]
@@ -98,15 +140,12 @@ class JournalTypeListdos extends Component
         JournalType::onlyTrashed()->whereIn('id', $ids)->restore();
 
         $this->resetSelection();
-        $this->dispatch('itemDeleted', [
+        $this->dispatch('show-swalindex', [
             'title' => '¡Recuperados!',
             'text'  => count($ids) . ' registros han sido restaurados.',
             'icon'  => 'success'
         ]);
     }
-
-
-
 
 
     public function toggleState($id)
@@ -158,7 +197,7 @@ class JournalTypeListdos extends Component
             // 3. Limpiar selección y refrescar interfaz
             $this->resetSelection();
 
-            $this->dispatch('itemDeleted', [
+            $this->dispatch('show-swalindex', [
                 'title' => '¡Éxito!',
                 'text'  => count($ids) . ' registro(s) eliminado(s) correctamente.',
                 'icon'  => 'success',
@@ -186,21 +225,63 @@ class JournalTypeListdos extends Component
 
 
 
-    /**
-     * Seleccionar todos (respeta filtros actuales)
-     */
-    public function updatedSelectAll($value)
+
+    #[On('forceDeleteSingle')]
+    public function forceDeleteSingle($id, $name): void
     {
-        if (!$value) {
-            $this->selectedItems = [];
-            return;
+        try {
+            // 🔍 1. Buscamos el registro exclusivamente en la papelera
+            $item = JournalType::onlyTrashed()->findOrFail($id);
+
+            // 🔒 2. Seguridad: Validamos mediante la Policy
+            $this->authorize('forceDelete', $item);
+
+            // 🚀 3. Ejecutamos la eliminación FÍSICA de la base de datos
+            $item->forceDelete();
+
+            // 📢 4. Notificamos el éxito
+            $this->dispatch('show-swalindex', [
+                'title' => '¡Borrado Permanente!',
+                'text' => "El registro '{$name}' ha sido eliminado definitivamente del sistema.",
+                'icon' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('show-swalindex', ['icon' => 'error', 'text' => $e->getMessage()]);
         }
+    }
 
-        // Obtenemos los IDs del query filtrado actual
-        $ids = $this->baseQuery()->select('id')->pluck('id');
+    #[On('confirmForceDeleteSelected')]
+    public function forceDeleteSelected(): void
+    {
+        try {
+            // 1. Obtenemos los IDs seleccionados
+            $ids = array_keys(array_filter($this->selectedItems, fn($value) => $value == true));
 
-        // 🚀 TIP SENIOR: Convertimos el ID a string para que el binding
-        // de Livewire "selectedItems.1" funcione perfectamente siempre.
-        $this->selectedItems = $ids->mapWithKeys(fn($id) => [(string)$id => true])->toArray();
+            if (empty($ids)) return;
+
+            // 2. Transacción para asegurar integridad
+            DB::transaction(function () use ($ids) {
+                $items = JournalType::onlyTrashed()->whereIn('id', $ids)->get();
+
+                foreach ($items as $item) {
+                    $this->authorize('forceDelete', $item);
+                    $item->forceDelete();
+                }
+            });
+
+            // 3. Limpiar y refrescar
+            $this->resetSelection();
+            $this->dispatch('show-swalindex', [
+                'title' => '¡Limpieza Exitosa!',
+                'text'  => count($ids) . ' registro(s) borrados permanentemente.',
+                'icon'  => 'success',
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('show-swalindex', [
+                'title' => 'Error',
+                'text'  => $e->getMessage(),
+                'icon'  => 'error',
+            ]);
+        }
     }
 }

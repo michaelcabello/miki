@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 //php artisan make:model StockLot -m
 class StockLot extends Model
@@ -26,8 +27,13 @@ class StockLot extends Model
      |======================*/
 
     // Un lote/serie pertenece a un producto variante (SKU)
-    public function productatribute()
+   /*  public function productatribute()
     {
-        return $this->belongsTo(Productatribute::class);
+        return $this->belongsTo(productatribute::class);
+    } */
+
+    public function productVariant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class);
     }
 }

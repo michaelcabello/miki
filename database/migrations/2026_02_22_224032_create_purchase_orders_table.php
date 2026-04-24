@@ -22,6 +22,7 @@ return new class extends Migration
 
             $table->timestamp('date_order');
             $table->timestamp('date_planned')->nullable();
+            $table->timestamp('date_approve')->nullable();
 
             $table->decimal('amount_untaxed', 15, 4)->default(0);
             $table->decimal('amount_tax', 15, 4)->default(0);

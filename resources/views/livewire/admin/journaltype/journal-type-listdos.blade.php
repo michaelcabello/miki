@@ -1,20 +1,27 @@
 <div class="space-y-6">
     {{-- 1. Wrapper Maestro: Gestiona Título, Botón Nuevo y Botón Rojo Masivo --}}
-    <x-admin.table-wrapper title="Gestión de Tipos de Diario" :newRoute="route('admin.journaltypes.create')" canCreate="JournalType Create"
-        :selectedCount="$selectedCount" :showTrashed="$showTrashed">
+    {{-- <x-admin.table-wrapper title="Gestión de Tipos de Diario" :newRoute="route('admin.journaltypesdos.create')" canCreate="JournalType Create"
+        :selectedCount="$selectedCount" :showTrashed="$showTrashed"> --}}
+    <x-admin.table-wrapper title="Gestión de Tipos de Diario" :newRoute="route('admin.journaltypesdos.create')" canCreate="JournalType Create"
+        :selectedCount="$selectedCount" :showTrashed="$showTrashed" canDelete="JournalType Delete" canRestore="JournalType Restore"
+        canExportExcel="JournalType ExportExcel" canExportPdf="JournalType ExportPdf" canImport="JournalType ImportExcel"
+        :exportRoute="route('admin.journaltypesdos.export')" :pdfRoute="route('admin.journaltypesdos.pdf')" :search="$search" :visibleColumns="array_keys(array_filter($columns))">
         {{-- Slot de Acciones Extra (Botón Mostrar Columnas y Toggle Papelera) --}}
         <x-slot name="extraActions">
             <div class="flex items-center gap-4">
                 {{-- Toggle Papelera Odoo Style --}}
-                <label class="flex items-center cursor-pointer group">
-                    <div class="mr-2 text-sm font-medium text-gray-600 dark:text-gray-400">Ver Papelera</div>
-                    <div class="relative">
-                        <input type="checkbox" wire:model.live="showTrashed" class="sr-only peer">
-                        <div
-                            class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 transition-colors">
+
+                @can('JournalType Restore')
+                    <label class="flex items-center cursor-pointer group">
+                        <div class="mr-2 text-sm font-medium text-gray-600 dark:text-gray-400">Ver Papelera</div>
+                        <div class="relative">
+                            <input type="checkbox" wire:model.live="showTrashed" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 transition-colors">
+                            </div>
                         </div>
-                    </div>
-                </label>
+                    </label>
+                @endcan
 
                 {{-- Botón Mostrar Columnas --}}
                 <div x-data="{ open: false }" class="relative">
@@ -36,27 +43,33 @@
             </div>
         </x-slot>
 
-        {{-- 2. Filtros Adicionales (Se ocultan en Papelera) --}}
-        @if (!$showTrashed)
-            <div class="px-4 py-2 flex gap-4">
+
+        {{-- 🚀 NUEVO: Slot para integrar el filtro de estado en la fila del buscador --}}
+        <x-slot name="filters">
+            @if (!$showTrashed)
                 <select wire:model.live="status"
-                    class="rounded-lg border-gray-300 dark:bg-gray-700 dark:text-gray-200 text-sm focus:ring-blue-500">
-                    <option value="all">Todos los estados</option>
-                    <option value="active">Solo Activos</option>
-                    <option value="inactive">Solo Inactivos</option>
+                    class="rounded-lg border-none bg-transparent text-sm font-medium text-gray-600 dark:text-gray-300 focus:ring-0">
+                    <option value="all">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="inactive">Inactivos</option>
                 </select>
-            </div>
-        @endif
+            @endif
+        </x-slot>
+
+
 
         {{-- 3. Tabla de Datos --}}
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th class="p-4 text-center">
-                            <input type="checkbox" wire:model.live="selectAll"
-                                class="rounded border-gray-300 text-blue-600">
-                        </th>
+                        @can('JournalType Delete')
+                            <th class="p-4 text-center">
+                                <input type="checkbox" wire:model.live="selectAll"
+                                    class="rounded border-gray-300 text-blue-600">
+                            </th>
+                        @endcan
+
                         <x-admin.th field="id" :$sortField :$sortDirection align="center">ID</x-admin.th>
                         @if ($columns['order'])
                             <x-admin.th field="order" :$sortField :$sortDirection align="center">Orden</x-admin.th>
@@ -72,10 +85,12 @@
                     @foreach ($journalTypes as $jt)
                         <tr wire:key="{{ $jt->id }}"
                             class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors {{ isset($selectedItems[$jt->id]) && $selectedItems[$jt->id] ? 'bg-blue-50 dark:bg-blue-900/10' : '' }}">
-                            <td class="p-4 text-center">
-                                <input type="checkbox" wire:model.live="selectedItems.{{ $jt->id }}"
-                                    wire:key="check-{{ $jt->id }}" class="rounded border-gray-300 text-blue-600">
-                            </td>
+                            @can('JournalType Delete')
+                                <td class="p-4 text-center">
+                                    <input type="checkbox" wire:model.live="selectedItems.{{ $jt->id }}"
+                                        wire:key="check-{{ $jt->id }}" class="rounded border-gray-300 text-blue-600">
+                                </td>
+                            @endcan
                             <td class="px-4 py-3 text-center text-sm text-gray-500">{{ $jt->id }}</td>
                             @if ($columns['order'])
                                 <td class="px-4 py-3 text-center text-sm">{{ $jt->order }}</td>
@@ -112,22 +127,33 @@
                                         {{-- 🟢 Acciones de Papelera --}}
                                         {{-- He quitado el @can temporalmente para que verifiques que funcione --}}
                                         @can('JournalType Restore')
-                                            <button wire:click="restore({{ $jt->id }})"
+                                            <button type="button"
+                                                onclick="confirmRestore({{ $jt->id }}, '{{ addslashes($jt->name) }}')"
                                                 class="text-indigo-600 hover:text-indigo-800 transition"
                                                 title="Restaurar este registro">
                                                 <i class="fa-solid fa-trash-arrow-up fa-lg"></i>
                                             </button>
                                         @endcan
+
+                                        {{-- 🚀 NUEVO: Botón Eliminar Definitivamente --}}
+                                        @can('forceDelete', $jt)
+                                            <button type="button"
+                                                onclick="confirmForceDelete({{ $jt->id }}, '{{ addslashes($jt->name) }}')"
+                                                class="text-red-600 hover:text-red-800 transition"
+                                                title="Eliminar permanentemente">
+                                                <i class="fa-solid fa-eraser fa-lg"></i>
+                                            </button>
+                                        @endcan
                                     @else
                                         {{-- 🔵 Acciones Normales (Editar/Eliminar) --}}
                                         @can('JournalType Update')
-                                            <a href="{{ route('admin.journaltypes.edit', $jt) }}" class="text-blue-600">
+                                            <a href="{{ route('admin.journaltypesdos.edit', $jt) }}" class="text-blue-600">
                                                 <i class="fa-solid fa-edit"></i>
                                             </a>
                                         @endcan
                                         @can('JournalType Delete')
-                                            <button
-                                                onclick="confirmDeleteJournalType({{ $jt->id }}, '{{ addslashes($jt->name) }}')"
+                                            <button type="button"
+                                                onclick="confirmDelete({{ $jt->id }}, '{{ addslashes($jt->name) }}')"
                                                 class="text-red-600">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
@@ -150,41 +176,12 @@
         </div>
     </x-admin.table-wrapper>
 
-    {{-- 5. Scripts de Confirmación (SweetAlert2) --}}
-    @push('scripts') {{-- 👈 Prueba con 'scripts' si 'js' no carga el SweetAlert --}}
-<script>
-    function confirmDeleteJournalType(id, name) {
-        Swal.fire({
-            title: '¿Mover a la papelera?',
-            text: `El registro "${name}" será ocultado de la lista activa.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // 🚀 CORRECCIÓN: Enviamos los parámetros directamente sin la llave 'data'
-                Livewire.dispatch('deleteSingle', { id: id, name: name });
-            }
-        });
-    }
 
-    function confirmBulkDelete() {
-        Swal.fire({
-            title: '¿Eliminar seleccionados?',
-            text: "Se moverán a la papelera los registros seleccionados.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Sí, eliminar todo'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // 🚀 CORRECCIÓN: El evento debe coincidir con el #[On] del PHP
-                Livewire.dispatch('confirmDeleteSelected');
-            }
-        });
-    }
-</script>
-@endpush
+
+    {{-- Modal de Importación Evolucionado --}}
+
+    <x-admin.import-modal :routeName="route('admin.journaltypesdos.import')" :templateRoute="route('admin.journaltypesdos.template')" columns="code, name, state, order" />
+
+
+
 </div>

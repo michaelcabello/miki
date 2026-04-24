@@ -2,11 +2,74 @@
     {{-- 1. Breadcrumb --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow px-6 py-3">
         <div class="flex items-center justify-between">
+
+
             <x-breadcrumb :links="[
                 'Dashboard' => route('dashboard'),
-                'Compras' => '#',
-                'Nueva Solicitud de Cotización' => '#',
+                'Compras' => route('purchase.order.index'),
+                $order && $order->name ? $order->name : 'Nueva Solicitud de Cotización' => '#',
             ]" />
+
+
+            {{-- BARRA DE ACCIONES ODOO STYLE --}}
+            <div class="flex flex-wrap items-center gap-2 bg-gray-50 p-3 rounded-t-xl border-b border-gray-200">
+                @if ($state === 'draft')
+                    <button wire:click="confirmOrder"
+                        class="bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold text-sm hover:bg-indigo-700 transition shadow-sm">
+                        Confirmar Pedido
+                    </button>
+                    <button wire:click="sendEmailPO"
+                        class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded-md font-bold text-sm hover:bg-gray-50 transition">
+                        Enviar por correo
+                    </button>
+                @endif
+
+                @if ($state === 'purchase')
+                    {{-- @if ($this->picking_count > 0)
+                        <button wire:click="receiveProducts"
+                            class="bg-indigo-600 text-white px-4 py-1.5 rounded-md font-bold text-sm hover:bg-indigo-700 transition shadow-sm">
+                            Recibir Productos
+                        </button>
+                    @endif --}}
+
+                    @if ($this->pending_pickings_count > 0)
+                        <button wire:click="receiveProducts" class="bg-indigo-600 text-white ...">
+                            Recibir Productos
+                        </button>
+                    @else
+                        <button disabled class="bg-gray-200 text-gray-500 cursor-not-allowed ...">
+                            Productos Recibidos
+                        </button>
+                    @endif
+
+                    <button wire:click="createBill"
+                        class="bg-white border border-indigo-600 text-indigo-600 px-4 py-1.5 rounded-md font-bold text-sm hover:bg-indigo-50 transition">
+                        Crear Factura
+                    </button>
+
+                    <button wire:click="sendEmailPO"
+                        class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded-md font-bold text-sm hover:bg-gray-50 transition">
+                        Enviar Orden de Compra
+                    </button>
+                @endif
+
+                @if ($order && $order->exists)
+                    <button wire:click="viewPdf"
+                        class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded-md font-bold text-sm hover:bg-gray-50 transition">
+                        Imprimir
+                    </button>
+
+                    @if ($state !== 'cancel' && $state !== 'done')
+                        <button wire:confirm="¿Estás seguro de cancelar esta orden?" wire:click="cancelOrder"
+                            class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded-md font-bold text-sm hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
+                            Cancelar
+                        </button>
+                    @endif
+                @endif
+            </div>
+
+
+
 
             @if ($currency_id && $moneda_base_id && $currency_id != $moneda_base_id)
                 @php
@@ -33,9 +96,17 @@
     {{-- 2. Header --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
+            {{-- <div>
                 <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Nueva Solicitud de Cotización</h1>
                 <p class="text-sm text-gray-500">Gestión de precios y proveedores para TICOM.</p>
+            </div> --}}
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                    {{ $order && $order->name ? $order->name : 'Nueva Solicitud de Cotización' }}
+                </h1>
+                <p class="text-sm text-gray-500">
+                    {{ $order && $order->name ? 'Detalles de la solicitud de compra.' : 'Gestión de precios y proveedores.' }}
+                </p>
             </div>
             <div class="flex items-center gap-3">
                 <a href="{{-- {{ route('admin.purchase.index') }} --}}"
@@ -82,7 +153,8 @@
                                         <button type="button" wire:key="partner-{{ $res['id'] }}"
                                             wire:click="selectPartner({{ $res['id'] }}, '{{ addslashes($res['name']) }}')"
                                             class="w-full p-3 hover:bg-indigo-50 text-left flex justify-between items-center border-b last:border-0 transition">
-                                            <span class="text-sm font-semibold text-gray-700">{{ $res['name'] }}</span>
+                                            <span
+                                                class="text-sm font-semibold text-gray-700">{{ $res['name'] }}</span>
                                             <span class="text-xs text-gray-400">{{ $res['document_number'] }}</span>
                                         </button>
                                     @endforeach
@@ -90,7 +162,14 @@
                             @endif
                         @endif
                     </div>
+                    @error('partner_id')
+                        <span class="text-red-500 text-[10px] font-bold mt-1">{{ $message }}</span>
+                    @enderror
                 </div>
+
+                @error('lines')
+                    <span class="text-red-500 text-xs font-bold block mt-2">{{ $message }}</span>
+                @enderror
 
                 {{-- Moneda y Fecha --}}
                 <div class="md:col-span-3">
@@ -167,15 +246,28 @@
                                             @endforeach
                                         </select>
                                     </td>
-                                    <td class="py-3 px-2">
+
+
+
+
+                                    {{-- Input de Cantidad --}}
+                                    <td>
                                         <input type="number" wire:model.live="lines.{{ $index }}.product_qty"
+                                            min="0" step="any" {{-- 🚀 Bloquea la tecla 'Menos' (-) y 'e' (exponencial) --}}
+                                            onkeydown="if(['-', 'e', 'E'].includes(event.key)) event.preventDefault();"
+                                            {{-- 🛡️ Si pegan un valor negativo, lo convierte en positivo o 0 inmediatamente --}} oninput="this.value = Math.abs(this.value)"
                                             class="w-full bg-transparent border-0 focus:ring-0 text-center font-bold text-indigo-600 p-0">
                                     </td>
-                                    <td class="py-3 px-2">
+
+                                    {{-- Input de Precio (Misma lógica) --}}
+                                    <td>
                                         <input type="number" wire:model.live="lines.{{ $index }}.price_unit"
-                                            class="w-full bg-transparent border-0 focus:ring-0 text-right font-medium p-0"
-                                            placeholder="0.00">
+                                            min="0" step="0.01"
+                                            onkeydown="if(['-', 'e', 'E'].includes(event.key)) event.preventDefault();"
+                                            oninput="this.value = Math.abs(this.value)"
+                                            class="w-full bg-transparent border-0 focus:ring-0 text-right font-medium p-0">
                                     </td>
+
                                     <td class="py-3 px-4 text-right font-bold text-gray-700">
                                         {{ $currency_symbol ?? 'S/' }} {{ number_format($line['price_subtotal'], 2) }}
                                     </td>

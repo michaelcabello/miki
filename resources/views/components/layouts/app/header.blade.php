@@ -123,6 +123,26 @@
     @stack('scripts')
     <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
     {{-- esto se usa para laravel tradicional --}}
+
+
+    @if (session()->has('success'))
+        <script>
+            document.addEventListener('livewire:navigated', () => {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Logrado!',
+                    text: "{{ session('success') }}",
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+            });
+        </script>
+    @endif
+
+
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const toastData = @json(session('swal'), JSON_PRETTY_PRINT);
@@ -137,11 +157,78 @@
                 });
             }
         });
+
+        /* esto es para mostra el mensaje de eliminar definitivamente */
+        function confirmForceDelete(id, name) {
+            Swal.fire({
+                title: '¿Estás completamente seguro?',
+                text: `Esta acción es IRREVERSIBLE. El registro "${name}" se borrará físicamente de la base de datos.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, borrar para siempre',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 🚀 Despacha el evento a Livewire
+                    Livewire.dispatch('forceDeleteSingle', {
+                        id: id,
+                        name: name
+                    });
+                }
+            });
+        }
     </script>
     {{-- fin de esto se usa para laravel tradicional --}}
 
 
     <script>
+        // 1. ELIMINACIÓN SIMPLE (Individual)
+        // Esta ya la tienes, pero asegúrate de que use llaves {} para parámetros nombrados
+        window.confirmDelete = function(id, name, eventName = 'deleteSingle') {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `El registro "${name}" será movido a la papelera.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Enviamos un objeto, Livewire 3 lo mapea automáticamente a los argumentos del método
+                    Livewire.dispatch(eventName, {
+                        id: id,
+                        name: name
+                    });
+                }
+            });
+        };
+
+        // 2. ACCIONES MASIVAS (Eliminar seleccionados, Restaurar seleccionados, etc.)
+        // 🚀 ESTA ES LA NUEVA FUNCIÓN GLOBAL PARA TU FRAMEWORK
+        window.confirmBulkAction = function(eventName, title = '¿Ejecutar acción masiva?', text =
+            'Se aplicará a todos los registros seleccionados.') {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch(eventName);
+                }
+            });
+        };
+
+
+
         document.addEventListener('livewire:navigated', () => {
 
             //parametro para edicion o actualizacion
@@ -184,7 +271,8 @@
                     timer: 3000,
                     timerProgressBar: true,
                     icon: data.icon ?? data.type ?? 'success',
-                    title: data.title ?? data.message ?? 'Operación realizada correctamente',
+                    title: data.title ?? data.message ??
+                        'Operación realizada correctamente',
                     text: data.text ?? '',
                 });
             });
@@ -229,22 +317,45 @@
                 });
             };
 
-            // Mensaje de éxito al eliminar (global)
-            Livewire.on('itemDeleted', ({
-                title,
-                text,
-                icon
-            }) => {
+
+
+
+            // Función global para restauración individual
+            window.confirmRestore = function(id, name, eventName = 'restoreSingle') {
                 Swal.fire({
-                    title: title ?? '¡Eliminado!',
-                    text: text ?? 'El registro fue eliminado correctamente.',
-                    icon: icon ?? 'success',
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#3085d6',
+                    title: '¿Restaurar registro?',
+                    text: `El registro "${name}" volverá a la lista activa del sistema.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981', // Verde éxito
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, restaurar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Despachamos el evento con los parámetros que espera el componente
+                        Livewire.dispatch(eventName, {
+                            id: id,
+                            name: name
+                        });
+                    }
+                });
+            };
+
+
+
+
+            window.addEventListener('show-swal', event => {
+                Swal.fire({
+                    icon: event.detail.icon,
+                    title: event.detail.title || '',
+                    text: event.detail.text,
+                    timer: 3000
                 });
             });
 
-            //termina eliminar
+
+
 
 
 

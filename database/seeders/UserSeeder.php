@@ -131,6 +131,28 @@ class UserSeeder extends Seeder
         Permission::create(['name' => 'Tax ImportExcel', 'display_name' => 'Importar Impuestos de Excel', 'model_name' => 'Tax'])->SyncRoles([$adminRole]);
 
 
+        Permission::create(['name' => 'Warehouse List', 'display_name' => 'Listar Almacenes', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Warehouse View', 'display_name' => 'Ver Almacenes', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Warehouse Create', 'display_name' => 'Crear Almacenes', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Warehouse Update', 'display_name' => 'Actualizar Almacenes', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Warehouse Delete', 'display_name' => 'Eliminar Almacenes', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Warehouse ExportExcel', 'display_name' => 'Exportar Almacenes a Excel', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Warehouse ExportPdf', 'display_name' => 'Exportar Almacenes a PDF', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'Warehouse ImportExcel', 'display_name' => 'Importar Almacenes de Excel', 'model_name' => 'Warehouse'])->SyncRoles([$adminRole]);
+
+        Permission::create(['name' => 'WarehouseLocation List', 'display_name' => 'Listar Ubicaciones en Almacenes', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'WarehouseLocation View', 'display_name' => 'Ver Ubicaciones en Almacenes', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'WarehouseLocation Create', 'display_name' => 'Crear Ubicaciones en Almacenes', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'WarehouseLocation Update', 'display_name' => 'Actualizar Ubicaciones en Almacenes', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'WarehouseLocation Delete', 'display_name' => 'Eliminar Ubicaciones en Almacenes', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'WarehouseLocation ExportExcel', 'display_name' => 'Exportar Ubicaciones en Almacenes a Excel', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'WarehouseLocation ExportPdf', 'display_name' => 'Exportar Ubicaciones en Almacenes a PDF', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+        Permission::create(['name' => 'WarehouseLocation ImportExcel', 'display_name' => 'Importar Ubicaciones en Almacenes de Excel', 'model_name' => 'WarehouseLocation'])->SyncRoles([$adminRole]);
+
+
+
+
+
 
 
         User::find(1)->assignRole($adminRole);

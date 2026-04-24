@@ -17,7 +17,6 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\admin\UserImportController;
 use App\Livewire\Admin\PermissionList;
 use App\Http\Controllers\admin\RoleController;
-use App\Http\Controllers\admin\WarehouseController;
 use App\Livewire\Admin\AccountList;
 use App\Livewire\Admin\CategoryCreate;
 use App\Livewire\Admin\CategoryEdit;
@@ -43,7 +42,9 @@ use App\Livewire\Admin\Journal\JournalCreate;
 use App\Livewire\Admin\Journal\JournalEdit;
 use App\Livewire\Admin\Journal\JournalList;
 use App\Livewire\Admin\Journaltype\JournalTypeCreate;
+use App\Livewire\Admin\Journaltype\JournalTypeCreatedos;
 use App\Livewire\Admin\Journaltype\JournalTypeEdit;
+use App\Livewire\Admin\Journaltype\JournalTypeEditdos;
 use App\Livewire\Admin\Journaltype\JournalTypeList;
 use App\Livewire\Admin\Journaltype\JournalTypeListdos;
 use App\Livewire\Admin\Partner\PartnerCreate;
@@ -59,6 +60,16 @@ use App\Livewire\Admin\SubscriptionPlan\SubscriptionPlanList;
 use App\Livewire\Admin\Tax\TaxCreate;
 use App\Livewire\Admin\Tax\TaxEdit;
 use App\Livewire\Admin\Tax\TaxList;
+use App\Livewire\Admin\Warehouse\WarehouseList;
+use App\Livewire\Admin\Warehouse\WarehouseCreate;
+use App\Livewire\Admin\Warehouse\WarehouseEdit;
+use App\Http\Controllers\Admin\Warehouse\WarehouseController;
+
+use App\Livewire\Admin\WarehouseLocation\WarehouseLocationList;
+use App\Livewire\Admin\WarehouseLocation\WarehouseLocationCreate;
+use App\Livewire\Admin\WarehouseLocation\WarehouseLocationEdit;
+use App\Http\Controllers\Admin\WarehouseLocation\WarehouseLocationController;
+use App\Livewire\Admin\Stock\StockPickingEdit;
 
 Route::get('/hola', function () {
     return '¡Hola desde el admin!';
@@ -123,7 +134,6 @@ Route::resource('leads', ContactController::class)->names('admin.contacts');
 
 Route::resource('categoryposts', CategorypostController::class)->names('admin.categoryposts');
 
-Route::resource('warehouses', WarehouseController::class)->names('admin.warehouses');
 
 //Route::resource('attributes', AttributeController::class)->names('admin.attributes');
 //Route::get('attributes', AttributeList::class)->middleware('permission:Attribute List')->name('admin.attributes.index');
@@ -208,8 +218,25 @@ Route::get('journal-types-export-excel', [JournalTypeController::class, 'exportE
 Route::get('journal-types-export-pdf', [JournalTypeController::class, 'exportPdf'])->name('admin.journaltypes.export.pdf');
 Route::post('journal-types/import', [JournalTypeController::class, 'import'])->name('admin.journaltypes.import');
 
-Route::get('journal-typesdos', JournalTypeListdos::class)->middleware('permission:JournalType List')->name('admin.journaltypesdos.index');
 
+/* Route::get('journal-typesdos', JournalTypeListdos::class)->middleware('permission:JournalType List')->name('admin.journaltypesdos.index');
+Route::get('journal-typesdos/create', JournalTypeCreatedos::class)->middleware('permission:JournalType Create')->name('admin.journaltypesdos.create');
+Route::get('journal-typesdos/{jt}/edit', JournalTypeEditdos::class)->middleware('permission:JournalType Update')->name('admin.journaltypesdos.edit');
+Route::get('journal-typesdos/export/{search?}', [JournalTypeController::class, 'exportExcel'])->name('admin.journaltypesdos.export');
+Route::get('journal-typesdos/pdf/{search?}', [JournalTypeController::class, 'exportPdf'])->name('admin.journaltypesdos.pdf');
+Route::post('admin/journal-typesdos/import', [JournalTypeController::class, 'import'])->name('admin.journaltypesdos.import');
+Route::get('admin/journal-typesdos/template', [JournalTypeController::class, 'downloadTemplate'])->name('admin.journaltypesdos.template'); */
+
+// 1. Rutas estáticas de exportación/importación (sin parámetros)
+Route::get('journal-typesdos/export', [JournalTypeController::class, 'exportExcel'])->middleware('permission:JournalType ExportExcel')->name('admin.journaltypesdos.export');
+Route::get('journal-typesdos/pdf', [JournalTypeController::class, 'exportPdf'])->middleware('permission:JournalType ExportPdf')->name('admin.journaltypesdos.pdf');
+Route::get('journal-typesdos/template', [JournalTypeController::class, 'downloadTemplate'])->middleware('permission:JournalType ImportExcel')->name('admin.journaltypesdos.template');
+Route::post('journal-typesdos/import', [JournalTypeController::class, 'import'])->middleware('permission:JournalType ImportExcel')->name('admin.journaltypesdos.import');
+// 2. Rutas Livewire (create antes que {jt} para evitar conflicto)
+Route::get('journal-typesdos', JournalTypeListdos::class)->middleware('permission:JournalType List')->name('admin.journaltypesdos.index');
+Route::get('journal-typesdos/create', JournalTypeCreatedos::class)->middleware('permission:JournalType Create')->name('admin.journaltypesdos.create');
+// 3. Ruta con parámetro SIEMPRE AL FINAL
+Route::get('journal-typesdos/{jt}/edit', JournalTypeEditdos::class)->middleware('permission:JournalType Update')->name('admin.journaltypesdos.edit');
 
 
 
@@ -258,6 +285,7 @@ Route::get('subscription-plans/{plan}/edit', SubscriptionPlanEdit::class)
 //compras
 Route::get('purchase/order/create', PurchaseOrderCreate::class)->name('purchase.order.create');
 Route::get('purchase/order/list', PurchaseOrderList::class)->name('purchase.order.index');
+Route::get('purchase/order/{id}/edit', PurchaseOrderCreate::class)->name('purchase.order.edit');
 
 //taxes
 
@@ -267,3 +295,112 @@ Route::post('taxes-import', [TaxController::class, 'import'])->name('admin.taxes
 Route::get('taxes', TaxList::class)->name('admin.taxes.index');
 Route::get('taxes/create', TaxCreate::class)->name('admin.taxes.create');
 Route::get('taxes/{tax}/edit', TaxEdit::class)->name('admin.taxes.edit');
+
+
+
+Route::get(
+    'warehouses/export',
+    [WarehouseController::class, 'exportExcel']
+)
+    ->middleware('permission:Warehouse ExportExcel')
+    ->name('admin.warehouses.export');
+
+Route::get(
+    'warehouses/pdf',
+    [WarehouseController::class, 'exportPdf']
+)
+    ->middleware('permission:Warehouse ExportPdf')
+    ->name('admin.warehouses.pdf');
+
+Route::get(
+    'warehouses/template',
+    [WarehouseController::class, 'downloadTemplate']
+)
+    ->middleware('permission:Warehouse ImportExcel')
+    ->name('admin.warehouses.template');
+
+Route::post(
+    'warehouses/import',
+    [WarehouseController::class, 'import']
+)
+    ->middleware('permission:Warehouse ImportExcel')
+    ->name('admin.warehouses.import');
+
+// 2. Rutas Livewire (create antes que {record} para evitar conflicto)
+Route::get(
+    'warehouses',
+    WarehouseList::class
+)
+    ->middleware('permission:Warehouse List')
+    ->name('admin.warehouses.index');
+
+Route::get(
+    'warehouses/create',
+    WarehouseCreate::class
+)
+    ->middleware('permission:Warehouse Create')
+    ->name('admin.warehouses.create');
+
+// 3. Ruta con parámetro SIEMPRE AL FINAL
+Route::get(
+    'warehouses/{record}/edit',
+    WarehouseEdit::class
+)
+    ->middleware('permission:Warehouse Update')
+    ->name('admin.warehouses.edit');
+
+
+
+
+
+Route::get(
+    'warehouse-locations/export',
+    [WarehouseLocationController::class, 'exportExcel']
+)
+    ->middleware('permission:WarehouseLocation ExportExcel')
+    ->name('admin.warehouse-locations.export');
+
+Route::get(
+    'warehouse-locations/pdf',
+    [WarehouseLocationController::class, 'exportPdf']
+)
+    ->middleware('permission:WarehouseLocation ExportPdf')
+    ->name('admin.warehouse-locations.pdf');
+
+Route::get(
+    'warehouse-locations/template',
+    [WarehouseLocationController::class, 'downloadTemplate']
+)
+    ->middleware('permission:WarehouseLocation ImportExcel')
+    ->name('admin.warehouse-locations.template');
+
+Route::post(
+    'warehouse-locations/import',
+    [WarehouseLocationController::class, 'import']
+)
+    ->middleware('permission:WarehouseLocation ImportExcel')
+    ->name('admin.warehouse-locations.import');
+
+Route::get(
+    'warehouse-locations',
+    WarehouseLocationList::class
+)
+    ->middleware('permission:WarehouseLocation List')
+    ->name('admin.warehouse-locations.index');
+
+Route::get(
+    'warehouse-locations/create',
+    WarehouseLocationCreate::class
+)
+    ->middleware('permission:WarehouseLocation Create')
+    ->name('admin.warehouse-locations.create');
+
+Route::get('warehouse-locations/{record}/edit', WarehouseLocationEdit::class)->middleware('permission:WarehouseLocation Update')->name('admin.warehouse-locations.edit');
+
+
+//Route::get('/vendor-bills/{id}/edit', VendorBillEdit::class)->name('admin.vendor-bills.edit');
+
+
+// Rutas de Inventario y PDF
+Route::get('/stock/picking/{id}/edit', StockPickingEdit::class)->name('admin.stock.picking.edit');
+

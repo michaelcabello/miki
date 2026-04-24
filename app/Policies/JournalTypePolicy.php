@@ -12,14 +12,14 @@ class JournalTypePolicy
     use HandlesAuthorization;
 
     //puede hacer de todo
-    public function before(User $user): ?bool
+   /*  public function before(User $user): ?bool
     {
         if ($user->hasRole('Admin')) {
-            return true; // Admin: todo permitido
+            return true;
         }
 
-        return null; // continúa con la policy normal
-    }
+        return null;
+    } */
 
 
     /* public function before($user)

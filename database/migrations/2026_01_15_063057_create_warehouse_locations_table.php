@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('name');
             // 🔹 Nombre completo tipo árbol (ej. WH/Stock/A1/Shelf 2)
             $table->string('complete_name')->nullable();
-
+            $table->unsignedSmallInteger('order')->default(0);
             // Árbol recursivo de ubicaciones
             $table->unsignedBigInteger('parent_id')->nullable();
             // Relación recursiva (ubicación padre)
@@ -40,13 +40,13 @@ return new class extends Migration
 
             $table->boolean('scrap_location')->default(false)->comment('Marcar como ubicación de merma/desecho');
             // Indicador si está activa
-            $table->boolean('is_active')->default(true);
+            $table->boolean('state')->default(true);
 
             // 🔹 Capacidad opcional (si quieres manejar límites)
             $table->decimal('capacity', 12, 2)->nullable();
             $table->timestamps();
 
-
+            $table->softDeletes();
             /*
             |--------------------------------------------------------------------------
             | Índices y Restricciones

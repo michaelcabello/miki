@@ -20,9 +20,12 @@ trait WithStandardTable
     public $selectAll = false;
 
     // 🚀 Recuperamos el control de columnas
-    public $columns = [
+    /*  public $columns = [
         'order' => false,
-    ];
+    ]; */
+
+    // ✅ CORRECTO — el trait es genérico
+    public $columns = [];
 
     public function updatingShowTrashed()
     {
@@ -65,19 +68,6 @@ trait WithStandardTable
         $this->selectedItems = [];
     }
 
-
-    public function updatedSelectAllBack($value)
-    {
-        if ($value) {
-            // Obtenemos solo los IDs de la consulta filtrada actual
-            $this->selectedItems = $this->baseQuery()
-                ->pluck('id')
-                ->mapWithKeys(fn($id) => [$id => $id])
-                ->toArray();
-        } else {
-            $this->selectedItems = [];
-        }
-    }
 
 
     public function updatedSelectAll($value)
